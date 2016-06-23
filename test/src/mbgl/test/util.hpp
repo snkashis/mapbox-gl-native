@@ -4,7 +4,7 @@
 #include <TargetConditionals.h>
 #endif
 
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || __ANDROID__
 #define TEST_READ_ONLY 1
 #define TEST_HAS_SERVER 0
 #else

@@ -1,5 +1,7 @@
 add_definitions(-DMBGL_USE_GLES2=1)
 
+include(cmake/test-files.cmake)
+
 #Include to use build specific variables
 include(${CMAKE_CURRENT_BINARY_DIR}/toolchain.cmake)
 
@@ -9,6 +11,9 @@ mason_use(libpng VERSION 1.6.25)
 mason_use(libzip VERSION 1.1.3)
 mason_use(nunicode VERSION 1.7.1)
 mason_use(sqlite VERSION 3.14.2)
+mason_use(gtest VERSION 1.7.0)
+
+## mbgl core ##
 
 macro(mbgl_platform_core)
 
@@ -46,11 +51,71 @@ macro(mbgl_platform_core)
         PRIVATE platform/default/png_reader.cpp
         PRIVATE platform/default/jpeg_reader.cpp
 
-        # Headless view
-        # TODO
-
         # Thread pool
         PRIVATE platform/default/thread_pool.cpp
+
+        # Conversion C++ -> Java
+        platform/android/src/conversion/constant.hpp
+        platform/android/src/conversion/conversion.hpp
+        platform/android/src/style/conversion/function.hpp
+        platform/android/src/style/conversion/property_value.hpp
+        platform/android/src/style/conversion/types.hpp
+        platform/android/src/style/conversion/types_string_values.hpp
+
+        # Style conversion Java -> C++
+        platform/android/src/style/android_conversion.hpp
+        platform/android/src/style/conversion/geojson.hpp
+        platform/android/src/style/value.cpp
+        platform/android/src/style/value.hpp
+        platform/android/src/style/conversion/url_or_tileset.hpp
+
+        # Style
+        platform/android/src/style/layers/background_layer.cpp
+        platform/android/src/style/layers/background_layer.hpp
+        platform/android/src/style/layers/circle_layer.cpp
+        platform/android/src/style/layers/circle_layer.hpp
+        platform/android/src/style/layers/custom_layer.cpp
+        platform/android/src/style/layers/custom_layer.hpp
+        platform/android/src/style/layers/fill_layer.cpp
+        platform/android/src/style/layers/fill_layer.hpp
+        platform/android/src/style/layers/layer.cpp
+        platform/android/src/style/layers/layer.hpp
+        platform/android/src/style/layers/layers.cpp
+        platform/android/src/style/layers/layers.hpp
+        platform/android/src/style/layers/line_layer.cpp
+        platform/android/src/style/layers/line_layer.hpp
+        platform/android/src/style/layers/raster_layer.cpp
+        platform/android/src/style/layers/raster_layer.hpp
+        platform/android/src/style/layers/symbol_layer.cpp
+        platform/android/src/style/layers/symbol_layer.hpp
+        platform/android/src/style/sources/geojson_source.cpp
+        platform/android/src/style/sources/geojson_source.hpp
+        platform/android/src/style/sources/source.cpp
+        platform/android/src/style/sources/source.hpp
+        platform/android/src/style/sources/sources.cpp
+        platform/android/src/style/sources/sources.hpp
+        platform/android/src/style/sources/raster_source.cpp
+        platform/android/src/style/sources/raster_source.hpp
+        platform/android/src/style/sources/vector_source.cpp
+        platform/android/src/style/sources/vector_source.hpp
+
+        # Connectivity
+        platform/android/src/connectivity_listener.cpp
+        platform/android/src/connectivity_listener.hpp
+
+        # Native map
+        platform/android/src/native_map_view.cpp
+        platform/android/src/native_map_view.hpp
+
+        # Main jni bindings
+        platform/android/src/attach_env.cpp
+        platform/android/src/attach_env.hpp
+        platform/android/src/java_types.cpp
+        platform/android/src/java_types.hpp
+
+        # Main entry point
+        platform/android/src/jni.hpp
+        platform/android/src/jni.cpp
     )
 
     target_include_directories(mbgl-core
@@ -64,6 +129,7 @@ macro(mbgl_platform_core)
     target_add_mason_package(mbgl-core PUBLIC libzip)
     target_add_mason_package(mbgl-core PUBLIC geojson)
     target_add_mason_package(mbgl-core PUBLIC jni.hpp)
+    target_add_mason_package(mbgl-core PUBLIC rapidjson)
 
     target_compile_options(mbgl-core
         PRIVATE -fvisibility=hidden
@@ -84,70 +150,11 @@ macro(mbgl_platform_core)
     )
 endmacro()
 
+## Main library ##
+
 add_library(mapbox-gl SHARED
-    # Conversion C++ -> Java
-    platform/android/src/conversion/constant.hpp
-    platform/android/src/conversion/conversion.hpp
-    platform/android/src/style/conversion/function.hpp
-    platform/android/src/style/conversion/property_value.hpp
-    platform/android/src/style/conversion/types.hpp
-    platform/android/src/style/conversion/types_string_values.hpp
-
-    # Style conversion Java -> C++
-    platform/android/src/style/android_conversion.hpp
-    platform/android/src/style/conversion/geojson.hpp
-    platform/android/src/style/value.cpp
-    platform/android/src/style/value.hpp
-    platform/android/src/style/conversion/url_or_tileset.hpp
-
-    # Style
-    platform/android/src/style/layers/background_layer.cpp
-    platform/android/src/style/layers/background_layer.hpp
-    platform/android/src/style/layers/circle_layer.cpp
-    platform/android/src/style/layers/circle_layer.hpp
-    platform/android/src/style/layers/custom_layer.cpp
-    platform/android/src/style/layers/custom_layer.hpp
-    platform/android/src/style/layers/fill_layer.cpp
-    platform/android/src/style/layers/fill_layer.hpp
-    platform/android/src/style/layers/layer.cpp
-    platform/android/src/style/layers/layer.hpp
-    platform/android/src/style/layers/layers.cpp
-    platform/android/src/style/layers/layers.hpp
-    platform/android/src/style/layers/line_layer.cpp
-    platform/android/src/style/layers/line_layer.hpp
-    platform/android/src/style/layers/raster_layer.cpp
-    platform/android/src/style/layers/raster_layer.hpp
-    platform/android/src/style/layers/symbol_layer.cpp
-    platform/android/src/style/layers/symbol_layer.hpp
-    platform/android/src/style/sources/geojson_source.cpp
-    platform/android/src/style/sources/geojson_source.hpp
-    platform/android/src/style/sources/source.cpp
-    platform/android/src/style/sources/source.hpp
-    platform/android/src/style/sources/sources.cpp
-    platform/android/src/style/sources/sources.hpp
-    platform/android/src/style/sources/raster_source.cpp
-    platform/android/src/style/sources/raster_source.hpp
-    platform/android/src/style/sources/vector_source.cpp
-    platform/android/src/style/sources/vector_source.hpp
-
-    # Native map
-    platform/android/src/native_map_view.cpp
-    platform/android/src/native_map_view.hpp
-
-    # Connectivity
-    platform/android/src/connectivity_listener.cpp
-    platform/android/src/connectivity_listener.hpp
-
-    # Main jni bindings
-    platform/android/src/jni.cpp
-    platform/android/src/jni.hpp
-    platform/android/src/attach_env.cpp
-    platform/android/src/attach_env.hpp
-    platform/android/src/java_types.cpp
-    platform/android/src/java_types.hpp
+    platform/android/src/main.cpp
 )
-
-target_add_mason_package(mapbox-gl PUBLIC rapidjson)
 
 target_compile_options(mapbox-gl
     PRIVATE -fvisibility=hidden
@@ -160,6 +167,56 @@ target_link_libraries(mapbox-gl
     PUBLIC mbgl-core
     PUBLIC -Wl,--gc-sections
 )
+
+## Test library ##
+
+add_library(mbgl-test SHARED
+    # Actual tests
+    ${MBGL_TEST_FILES}
+
+    # Main test entry point
+    platform/android/src/test/main.jni.cpp
+
+)
+
+target_sources(mbgl-test
+    # Headless view
+    PRIVATE platform/default/headless_backend.cpp
+    PRIVATE platform/default/offscreen_view.cpp
+
+    PRIVATE platform/linux/src/headless_backend_egl.cpp
+    PRIVATE platform/linux/src/headless_display_egl.cpp
+)
+
+target_compile_options(mbgl-test
+    PRIVATE -fvisibility=hidden
+    PRIVATE -Os
+)
+
+target_include_directories(mbgl-test
+    PRIVATE include
+    PRIVATE src # TODO: eliminate
+    PRIVATE test/include
+    PRIVATE test/src
+    PRIVATE platform/default
+    PRIVATE ${MBGL_GENERATED}/include
+)
+
+target_link_libraries(mbgl-test
+    PRIVATE mbgl-core
+)
+
+target_add_mason_package(mbgl-test PRIVATE geometry)
+target_add_mason_package(mbgl-test PRIVATE variant)
+target_add_mason_package(mbgl-test PRIVATE unique_resource)
+target_add_mason_package(mbgl-test PRIVATE rapidjson)
+target_add_mason_package(mbgl-test PRIVATE gtest)
+target_add_mason_package(mbgl-test PRIVATE pixelmatch)
+target_add_mason_package(mbgl-test PRIVATE boost)
+target_add_mason_package(mbgl-test PRIVATE geojson)
+target_add_mason_package(mbgl-test PRIVATE geojsonvt)
+
+## Custom layer example ##
 
 add_library(example-custom-layer SHARED
     platform/android/src/example_custom_layer.cpp
@@ -176,6 +233,8 @@ target_link_libraries(example-custom-layer
     PRIVATE mbgl-core
     PUBLIC -Wl,--gc-sections
 )
+
+## Strip and copy ##
 
 set(ANDROID_SDK_PROJECT_DIR ${CMAKE_SOURCE_DIR}/platform/android/MapboxGLAndroidSDK)
 set(ANDROID_JNI_TARGET_DIR ${ANDROID_SDK_PROJECT_DIR}/src/main/jniLibs/${ANDROID_JNIDIR}/)
@@ -198,6 +257,7 @@ add_custom_target(copy-files
 
 add_custom_target(_all ALL
     DEPENDS mapbox-gl
+    DEPENDS mbgl-test
     DEPENDS example-custom-layer
     DEPENDS copy-files
 )
