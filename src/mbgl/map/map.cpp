@@ -825,13 +825,32 @@ std::unique_ptr<Source> Map::removeSource(const std::string& sourceID) {
     }
     return nullptr;
 }
+    
+std::vector<style::Layer*> Map::getLayers() {
+    return impl->style ? impl->style->getLayers() : std::vector<style::Layer*>();
+}
 
-style::Layer* Map::getLayer(const std::string& layerID) {
+Layer* Map::getLayer(const std::string& layerID) {
     if (impl->style) {
         impl->styleMutated = true;
         return impl->style->getLayer(layerID);
     }
     return nullptr;
+}
+
+void Map::setLayers(std::vector<std::unique_ptr<Layer>>& layers) {
+    if (!impl->style) {
+        impl->styleMutated = true;
+        return;
+    }
+
+    impl->backend.activate();
+
+    impl->style->setLayers(layers);
+    impl->updateFlags |= Update::Classes;
+    impl->asyncUpdate.send();
+
+    impl->backend.deactivate();
 }
 
 void Map::addLayer(std::unique_ptr<Layer> layer, const optional<std::string>& before) {

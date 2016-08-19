@@ -165,6 +165,15 @@ std::vector<const Layer*> Style::getLayers() const {
     return result;
 }
 
+std::vector<Layer*> Style::getLayers() {
+    std::vector<Layer*> result;
+    result.reserve(layers.size());
+    for (auto& layer : layers) {
+        result.push_back(layer.get());
+    }
+    return result;
+}
+
 std::vector<std::unique_ptr<Layer>>::const_iterator Style::findLayer(const std::string& id) const {
     return std::find_if(layers.begin(), layers.end(), [&](const auto& layer) {
         return layer->baseImpl->id == id;
@@ -174,6 +183,15 @@ std::vector<std::unique_ptr<Layer>>::const_iterator Style::findLayer(const std::
 Layer* Style::getLayer(const std::string& id) const {
     auto it = findLayer(id);
     return it != layers.end() ? it->get() : nullptr;
+}
+
+void Style::setLayers(std::vector<std::unique_ptr<Layer>>& newLayers) {
+    for (auto& layer : layers) {
+        removeLayer(layer->getID());
+    }
+    for (auto& layer : newLayers) {
+        addLayer(std::move(layer));
+    }
 }
 
 Layer* Style::addLayer(std::unique_ptr<Layer> layer, optional<std::string> before) {

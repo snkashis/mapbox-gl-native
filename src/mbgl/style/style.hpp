@@ -69,7 +69,9 @@ public:
     std::unique_ptr<Source> removeSource(const std::string& sourceID);
 
     std::vector<const Layer*> getLayers() const;
+    std::vector<Layer*> getLayers();
     Layer* getLayer(const std::string& id) const;
+    void setLayers(std::vector<std::unique_ptr<Layer>>&);
     Layer* addLayer(std::unique_ptr<Layer>,
                     optional<std::string> beforeLayerID = {});
     std::unique_ptr<Layer> removeLayer(const std::string& layerID);
