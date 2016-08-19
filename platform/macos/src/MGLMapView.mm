@@ -152,6 +152,8 @@ public:
 @property (nonatomic, readwrite) NSImageView *logoView;
 @property (nonatomic, readwrite) NSView *attributionView;
 
+@property (nonatomic, readwrite) MGLStyle *style;
+
 /// Mapping from reusable identifiers to annotation images.
 @property (nonatomic) NS_MUTABLE_DICTIONARY_OF(NSString *, MGLAnnotationImage *) *annotationImagesByIdentifier;
 /// Currently shown popover representing the selected annotation.
@@ -589,6 +591,7 @@ public:
 
     styleURL = styleURL.mgl_URLByStandardizingScheme;
     _mbglMap->setStyleURL(styleURL.absoluteString.UTF8String);
+    self.style = [[MGLStyle alloc] initWithMapView:self];
 }
 
 - (IBAction)reloadStyle:(__unused id)sender {
@@ -842,6 +845,7 @@ public:
         }
         case mbgl::MapChangeWillStartLoadingMap:
         {
+            [self.style willChangeValueForKey:@"layers"];
             if ([self.delegate respondsToSelector:@selector(mapViewWillStartLoadingMap:)]) {
                 [self.delegate mapViewWillStartLoadingMap:self];
             }
@@ -849,6 +853,7 @@ public:
         }
         case mbgl::MapChangeDidFinishLoadingMap:
         {
+            [self.style didChangeValueForKey:@"layers"];
             if ([self.delegate respondsToSelector:@selector(mapViewDidFinishLoadingMap:)]) {
                 [self.delegate mapViewDidFinishLoadingMap:self];
             }
@@ -2199,13 +2204,6 @@ public:
 }
 
 #pragma mark - Runtime styling
-
-- (MGLStyle *)style
-{
-    MGLStyle *style = [[MGLStyle alloc] init];
-    style.mapView = self;
-    return style;
-}
 
 - (mbgl::Map *)mbglMap
 {
