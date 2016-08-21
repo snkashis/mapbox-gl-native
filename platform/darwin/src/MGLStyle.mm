@@ -168,7 +168,7 @@ static NSURL *MGLStyleURL_emerald;
 
 #pragma mark Style layers
 
-- (NSMutableArray<MGLStyleLayer *> *)layers
+- (NS_MUTABLE_ARRAY_OF(MGLStyleLayer *) *)layers
 {
     auto layers = self.mapView.mbglMap->getLayers();
     NSMutableArray *styleLayers = [NSMutableArray arrayWithCapacity:layers.size()];
@@ -179,7 +179,7 @@ static NSURL *MGLStyleURL_emerald;
     return styleLayers;
 }
 
-- (void)setLayers:(NSMutableArray<MGLStyleLayer *> *)layers {
+- (void)setLayers:(NS_MUTABLE_ARRAY_OF(MGLStyleLayer *) *)layers {
     for (MGLStyleLayer *layer in self.layers.reverseObjectEnumerator) {
         [self removeLayer:layer];
     }
