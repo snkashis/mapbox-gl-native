@@ -185,7 +185,7 @@ Layer* Style::getLayer(const std::string& id) const {
     return it != layers.end() ? it->get() : nullptr;
 }
 
-void Style::setLayers(std::vector<std::unique_ptr<Layer>>& newLayers) {
+void Style::setLayers(std::vector<std::unique_ptr<Layer>> newLayers) {
     for (auto& layer : layers) {
         removeLayer(layer->getID());
     }

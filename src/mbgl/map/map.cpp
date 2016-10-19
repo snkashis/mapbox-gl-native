@@ -838,7 +838,7 @@ Layer* Map::getLayer(const std::string& layerID) {
     return nullptr;
 }
 
-void Map::setLayers(std::vector<std::unique_ptr<Layer>>& layers) {
+void Map::setLayers(std::vector<std::unique_ptr<Layer>> layers) {
     if (!impl->style) {
         impl->styleMutated = true;
         return;
@@ -846,7 +846,7 @@ void Map::setLayers(std::vector<std::unique_ptr<Layer>>& layers) {
 
     impl->backend.activate();
 
-    impl->style->setLayers(layers);
+    impl->style->setLayers(std::move(layers));
     impl->updateFlags |= Update::Classes;
     impl->asyncUpdate.send();
 
