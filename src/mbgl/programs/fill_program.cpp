@@ -8,7 +8,7 @@ namespace mbgl {
 
 using namespace style;
 
-static_assert(sizeof(FillAttributes::Vertex) == 4, "expected FillVertex size");
+static_assert(sizeof(FillLayoutVertex) == 4, "expected FillLayoutVertex size");
 
 FillPatternUniforms::Values
 FillPatternUniforms::values(mat4 matrix,

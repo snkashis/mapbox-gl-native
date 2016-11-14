@@ -1,8 +1,11 @@
 #pragma once
 
+#include <mbgl/gl/object.hpp>
+#include <mbgl/gl/vertex_buffer.hpp>
 #include <mbgl/util/optional.hpp>
 
 #include <cstddef>
+#include <vector>
 
 namespace mbgl {
 namespace gl {
@@ -23,6 +26,8 @@ public:
 
     std::size_t vertexLength;
     std::size_t indexLength;
+
+    bool needAttributeBinding(Context&, BufferID indexBuffer) const;
 
 private:
     friend class Context;
