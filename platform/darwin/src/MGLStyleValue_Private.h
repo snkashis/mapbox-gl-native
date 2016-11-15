@@ -4,6 +4,8 @@
 
 #import "NSValue+MGLStyleAttributeAdditions.h"
 #import "MGLTypes.h"
+#import "MGLLineStyleLayer.h"
+#import <mbgl/util/enum.hpp>
 
 #if TARGET_OS_IPHONE
     #import "UIColor+MGLAdditions.h"
@@ -12,6 +14,35 @@
 #endif
 
 #include <array>
+
+template <typename MBGLType, typename MGLType>
+class MGLStyleEnumerationValueTransformer {
+
+public:
+    MGLStyleValue<NSValue *> * propertyValueMGLStyleValue(mbgl::style::PropertyValue<MBGLType> propertyValue)
+    {
+        if (propertyValue.isFunction())
+        {
+            const auto &mbglStops = propertyValue.asFunction().getStops();
+            NSMutableDictionary *stops = [NSMutableDictionary dictionaryWithCapacity:mbglStops.size()];
+            for (const auto &mbglStop : mbglStops) {
+                auto str = mbgl::Enum<MBGLType>::toString(mbglStop.second);
+                MGLType mglType;
+                mglType = mbgl::Enum<MGLType>::toEnum(str).value_or(mglType);
+                stops[@(mbglStop.first)] = [MGLStyleValue valueWithRawValue:[NSValue value:&mglType withObjCType:@encode(NSUInteger)]];
+            }
+            return [MGLStyleFunction<NSValue *> functionWithBase:propertyValue.asFunction().getBase() stops:stops];
+        }
+        else
+        {
+            auto str = mbgl::Enum<MBGLType>::toString(propertyValue.asConstant());
+            MGLType mglType;
+            mglType = mbgl::Enum<MGLType>::toEnum(str).value_or(mglType);
+            return [MGLStyleConstantValue<NSValue *> valueWithRawValue:[NSValue value:&mglType withObjCType:@encode(NSUInteger)]];
+        }
+    }
+
+};
 
 template <typename MBGLType, typename ObjCType, typename MBGLElement = MBGLType>
 class MGLStyleValueTransformer {
@@ -26,7 +57,7 @@ public:
             return nil;
         }
     }
-    
+
     mbgl::style::PropertyValue<MBGLType> toPropertyValue(MGLStyleValue<ObjCType> *value) {
         if ([value isKindOfClass:[MGLStyleConstantValue class]]) {
             MBGLType mbglValue;
@@ -92,13 +123,6 @@ private:
         return [NSValue mgl_valueWithPaddingArray:mbglStopValue];
     }
     
-    // Enumerations
-    template <typename MBGLEnum = MBGLType, class = typename std::enable_if<std::is_enum<MBGLEnum>::value>::type>
-    ObjCType toMGLRawStyleValue(const MBGLType &mbglStopValue) {
-        NSUInteger rawValue = static_cast<NSUInteger>(mbglStopValue);
-        return [NSValue value:&rawValue withObjCType:@encode(NSUInteger)];
-    }
-    
     MGLColor *toMGLRawStyleValue(const mbgl::Color mbglStopValue) {
         return [MGLColor mgl_colorWithColor:mbglStopValue];
     }
@@ -110,7 +134,7 @@ private:
         }
         return array;
     }
-    
+
 private:
     
     void getMBGLValue(NSNumber *rawValue, bool &mbglValue) {
@@ -133,12 +157,6 @@ private:
     // Padding
     void getMBGLValue(NSValue *rawValue, std::array<float, 4> &mbglValue) {
         mbglValue = rawValue.mgl_paddingArrayValue;
-    }
-    
-    // Enumerations
-    template <typename MBGLEnum = MBGLType, class = typename std::enable_if<std::is_enum<MBGLEnum>::value>::type>
-    void getMBGLValue(ObjCType rawValue, MBGLType &mbglValue) {
-        [rawValue getValue:&mbglValue];
     }
     
     void getMBGLValue(MGLColor *rawValue, mbgl::Color &mbglValue) {

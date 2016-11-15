@@ -5,6 +5,7 @@
 #import "MBXOfflinePacksTableViewController.h"
 #import "MBXAnnotationView.h"
 #import "MBXUserLocationAnnotationView.h"
+#import "NSValue+MGLStyleEnumAttributeAdditions.h"
 
 #import "MGLFillStyleLayer.h"
 
@@ -816,8 +817,61 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     });
 }
 
++ (MGLStyleConstantValue<NSValue *> *)testEnum:(NSUInteger)value type:(const char *)type
+{
+    return [MGLStyleConstantValue<NSValue *> valueWithRawValue:[NSValue value:&value withObjCType:type]];
+}
+
++ (MGLStyleFunction<NSValue *> *)testEnumFunction:(NSUInteger)value type:(const char *)type
+{
+    return [MGLStyleFunction<NSValue *> valueWithStops:@{
+                                                         @18: [self testEnum:value type:type],
+                                                         }];
+}
+
 - (void)styleFilteredLines
 {
+
+#warning remove this test stub
+
+    NSURL *customStyleURL = [[NSURL alloc] initWithString:@"mapbox://styles/boundsj/cipk5wcrv0052cvnfzx8lnbf3"];
+    [self.mapView setStyleURL:customStyleURL];
+
+
+    // fetch the line layer after a second to give it time to load
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+        MGLLineStyleLayer *randomLineLayer = (MGLLineStyleLayer *)[self.mapView.style layerWithIdentifier:@"random-line"];
+
+        randomLineLayer.lineJoin = [MGLStyleValue valueWithRawValue:[NSValue valueWithMGLLineJoin:MGLLineJoinMiter]];
+
+        MGLStyleConstantValue *lineJoin = (MGLStyleConstantValue *)randomLineLayer.lineJoin;
+        NSValue *join = (NSValue *)lineJoin.rawValue;
+        MGLLineJoin finalJoin;
+        [join getValue:&finalJoin];
+        NSLog(@"================> join %ld", finalJoin);
+
+        randomLineLayer.lineCap = [MBXViewController testEnumFunction:MGLLineCapRound type:@encode(MGLLineCap)];
+        MGLStyleFunction *lineCapFunc = (MGLStyleFunction *)randomLineLayer.lineCap;
+        MGLStyleConstantValue *firstStop = (MGLStyleConstantValue *)lineCapFunc.stops[@18];
+        NSValue *cap = (NSValue *)firstStop.rawValue;
+        MGLLineCap finalCap;
+        [cap getValue:&finalCap];
+        NSLog(@"================> cap %ld", finalCap);
+
+        randomLineLayer.lineTranslateAnchor = [MBXViewController testEnumFunction:MGLLineTranslateAnchorViewport type:@encode(MGLLineTranslateAnchor)];
+        MGLStyleFunction *lineTransFunc = (MGLStyleFunction *)randomLineLayer.lineTranslateAnchor;
+        MGLStyleConstantValue *lineTransFuncFirstStop = (MGLStyleConstantValue *)lineTransFunc.stops[@18];
+        NSValue *lineTransValue = (NSValue *)lineTransFuncFirstStop.rawValue;
+        MGLLineCap finalLineTrans;
+        [lineTransValue getValue:&finalLineTrans];
+        NSLog(@"================> cap %ld", finalLineTrans);
+    });
+    return;
+
+
+#warning reenable this test
+
     // set style and focus on lower 48
     [self.mapView setStyleURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"line_filter_style" ofType:@"json"]]];
     [self.mapView setCenterCoordinate:CLLocationCoordinate2DMake(40, -97) zoomLevel:5 animated:NO];
