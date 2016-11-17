@@ -1,13 +1,15 @@
-public class Main {
-	public native void runAllTests();
 
-	public static void main(String[] args) throws Exception {
-		//Need to load the mapbox-gl library explicitly first
-		System.loadLibrary("mapbox-gl");
-		//Load the tests
-		System.loadLibrary("mbgl-test");
-		System.out.println("Libraries loaded");
-		//Run the tests
-		new Main().runAllTests();
-	}
+public class Main {
+    public native void runAllTests();
+
+    public static void main(String[] args) throws Exception {
+        //Load the tests
+        System.loadLibrary("mbgl-test");
+
+        //Run the tests
+        new Main().runAllTests();
+
+        //Exit explicitly otherwise dalvikvm won't quit
+        System.exit(0);
+    }
 }
