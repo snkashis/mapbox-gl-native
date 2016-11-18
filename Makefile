@@ -509,7 +509,8 @@ run-android-core-test-$1: android-lib-$1 android-test-lib-$1
 	unzip -o platform/android/MapboxGLAndroidSDKTestApp/build/outputs/apk/MapboxGLAndroidSDKTestApp-debug.apk classes.dex -d build/android-$1/$(BUILDTYPE)
 	
 	#Compile Test runner
-	javac -sourcepath platform/android/src/test -d build/android-$1/$(BUILDTYPE) -source 1.7 -target 1.7 platform/android/src/test/Main.java
+	find platform/android/src/test -name "*.java" > build/android-$1/$(BUILDTYPE)/java-sources.txt
+	javac -sourcepath platform/android/src/test -d build/android-$1/$(BUILDTYPE) -source 1.7 -target 1.7 @build/android-$1/$(BUILDTYPE)/java-sources.txt
 	#Combine and dex
 	cd build/android-$1/$(BUILDTYPE) && dx --dex --output=test.jar *.class classes.dex
 
