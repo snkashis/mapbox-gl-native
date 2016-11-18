@@ -66,6 +66,22 @@ workflows:
             echo "Compile libmapbox-gl.so for armeabi-v7a abi:"
             export BUILDTYPE=Debug
             make android-lib-arm-v7
+    - create-android-emulator@0.9.1:
+        run_if: '{{enveq "SKIPCI" "false"}}'
+        inputs:
+        - name: emulator
+    - start-android-emulator@1.1.0:
+        run_if: '{{enveq "SKIPCI" "false"}}'
+        inputs:
+        - emulator_name: emulator
+    - script:
+        title: Run Core tests
+        run_if: '{{enveq "SKIPCI" "false"}}'
+        inputs:
+        - content: |-
+            #!/bin/bash
+            echo "Running core tests:"
+            make run-android-core-test-arm-v7
     - script:
         title: Run local JVM Unit tests
         run_if: '{{enveq "SKIPCI" "false"}}'
