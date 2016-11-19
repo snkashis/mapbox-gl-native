@@ -518,6 +518,10 @@ run-android-core-test-$1: android-lib-$1 android-test-lib-$1
 	adb shell "rm -Rf $(ANDROID_LOCAL_WORK_DIR)"
 	adb shell "mkdir -p $(ANDROID_LOCAL_WORK_DIR)/test"
 
+	# Generate zipped asset files
+	cd test/fixtures/api && zip -r assets.zip assets && cd -
+	cd test/fixtures/storage && zip -r assets.zip assets && cd -
+
 	#Push all needed files to the device
 	adb push build/android-$1/$(BUILDTYPE)/test.jar $(ANDROID_LOCAL_WORK_DIR)
 	adb push test/fixtures $(ANDROID_LOCAL_WORK_DIR)/test
