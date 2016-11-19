@@ -527,6 +527,10 @@ run-android-core-test-$1: android-lib-$1 android-test-lib-$1
 	#Kick off the tests
 	adb shell "export LD_LIBRARY_PATH=/system/lib:$(ANDROID_LOCAL_WORK_DIR) && cd $(ANDROID_LOCAL_WORK_DIR) && dalvikvm32 -cp $(ANDROID_LOCAL_WORK_DIR)/test.jar Main"
 
+	#Gather the results
+	adb shell "cd $(ANDROID_LOCAL_WORK_DIR) && tar -cvzf results.tgz test/fixtures/*"
+	adb pull $(ANDROID_LOCAL_WORK_DIR)/results.tgz build/android-$1/$(BUILDTYPE)/
+
 .PHONY: run-android-$1
 run-android-$1: android-$1
 	cd platform/android  && ./gradlew :MapboxGLAndroidSDKTestApp:installDebug && adb shell am start -n com.mapbox.mapboxsdk.testapp/.activity.FeatureOverviewActivity	
