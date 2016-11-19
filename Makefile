@@ -512,7 +512,7 @@ run-android-core-test-$1: android-lib-$1 android-test-lib-$1
 	find platform/android/src/test -name "*.java" > build/android-$1/$(BUILDTYPE)/java-sources.txt
 	javac -sourcepath platform/android/src/test -d build/android-$1/$(BUILDTYPE) -source 1.7 -target 1.7 @build/android-$1/$(BUILDTYPE)/java-sources.txt
 	#Combine and dex
-	cd build/android-$1/$(BUILDTYPE) && dx --dex --output=test.jar *.class classes.dex
+	cd build/android-$1/$(BUILDTYPE) && $(ANDROID_HOME)/build-tools/25.0.0/dx --dex --output=test.jar *.class classes.dex
 
 	#Ensure clean state on the device
 	adb shell "rm -Rf $(ANDROID_LOCAL_WORK_DIR)"
