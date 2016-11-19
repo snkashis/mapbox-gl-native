@@ -193,6 +193,10 @@ target_compile_options(mbgl-test
     PRIVATE -Os
 )
 
+target_compile_definitions(mbgl-test
+    PRIVATE MBGL_ASSET_ZIP=1
+)
+
 target_include_directories(mbgl-test
     PRIVATE include
     PRIVATE src # TODO: eliminate
