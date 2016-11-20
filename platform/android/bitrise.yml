@@ -66,10 +66,17 @@ workflows:
             echo "Compile libmapbox-gl.so for armeabi-v7a abi:"
             export BUILDTYPE=Debug
             make android-lib-arm-v7
-    - create-android-emulator@0.9.1:
+    - script:
+        title: Create emulator
         run_if: '{{enveq "SKIPCI" "false"}}'
         inputs:
-        - name: emulator
+        - content: |-
+            #!/bin/bash
+            echo "Creating emulator:"
+            set -ex
+            echo y | android update sdk --no-ui --all --filter addon-google_apis-google-21
+            echo y | android update sdk --no-ui --all --filter sys-img-armeabi-v7a-google_apis-21
+            echo no | android create avd --force --name emulator --target "android-21" --abi "google_apis/armeabi-v7a" --sdcard 1024M
     - start-android-emulator@1.1.0:
         run_if: '{{enveq "SKIPCI" "false"}}'
         inputs:
