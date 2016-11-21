@@ -101,7 +101,9 @@ std::set<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logicalInp
         float totalWidth = 0;
         
         for (char16_t chr : logicalInput) {
-            totalWidth += sdfs.find(chr)->second.metrics.advance + spacing;
+            auto it = sdfs.find(chr);
+            if (it != sdfs.end())
+                totalWidth += it->second.metrics.advance + spacing;
         }
         
         uint32_t estimatedLineCount = std::fmax(1, std::ceil(totalWidth / maxWidth));
@@ -113,8 +115,11 @@ std::set<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logicalInp
     float lastSafeBreakX = 0;
 
     for (uint32_t i = 0; i < logicalInput.size(); i++) {
-        char16_t chr = logicalInput[i];
-        const SDFGlyph& glyph = sdfs.find(chr)->second;
+        auto it = sdfs.find(logicalInput[i]);
+        if (it==sdfs.end())
+            continue;
+        
+        const SDFGlyph& glyph = it->second;
         currentX += glyph.metrics.advance + spacing;
         if ( currentX > maxWidth && lastSafeBreak > 0 )
         {
@@ -148,12 +153,6 @@ void GlyphSet::shapeLines(Shaping& shaping, const std::vector<std::u16string>& l
     
     for (std::u16string line : lines)
     {
-        // Filter out any missing glyphs ahead of time, after this assume we have all glyphs
-        line.erase(std::remove_if(line.begin(),
-                                  line.end(),
-                                  [ & ] (const char16_t& chr) -> bool { auto it = sdfs.find(chr); return it == sdfs.end(); }),
-                   line.end());
-        
         // Collapse whitespace so it doesn't throw off justification
         boost::algorithm::trim_if(line, boost::algorithm::is_any_of(u" \t\n\v\f\r"));
         
@@ -163,10 +162,17 @@ void GlyphSet::shapeLines(Shaping& shaping, const std::vector<std::u16string>& l
         uint32_t lineStartIndex = shaping.positionedGlyphs.size();
         for (char16_t chr : line)
         {
-            const SDFGlyph& glyph = sdfs.find(chr)->second;
+            auto it = sdfs.find(chr);
+            if (it == sdfs.end())
+                continue;
+            
+            const SDFGlyph& glyph = it->second;
             shaping.positionedGlyphs.emplace_back(chr, x, y);
             x += glyph.metrics.advance + spacing;
         }
+        
+        if (shaping.positionedGlyphs.size() == lineStartIndex)
+            continue;
         
         maxLineLength = util::max(x,maxLineLength);
         
