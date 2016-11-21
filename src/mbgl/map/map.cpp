@@ -803,6 +803,10 @@ AnnotationIDs Map::queryPointAnnotations(const ScreenBox& box) {
 
 #pragma mark - Style API
 
+std::vector<style::Source*> Map::getSources() {
+    return impl->style ? impl->style->getSources() : std::vector<style::Source*>();
+}
+
 style::Source* Map::getSource(const std::string& sourceID) {
     if (impl->style) {
         impl->styleMutated = true;

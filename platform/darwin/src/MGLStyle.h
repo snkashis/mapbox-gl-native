@@ -177,6 +177,11 @@ static const NSInteger MGLStyleDefaultVersion = 9;
 #pragma mark Managing Sources
 
 /**
+ A set containing the style’s sources.
+ */
+@property (nonatomic, strong) NS_MUTABLE_SET_OF(MGLSource *) *sources;
+
+/**
  Returns a source with the given identifier in the current style.
 
  @return An instance of a concrete subclass of `MGLSource` associated with the

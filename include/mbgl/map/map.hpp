@@ -157,6 +157,7 @@ public:
     void removeAnnotation(AnnotationID);
 
     // Sources
+    std::vector<style::Source*> getSources();
     style::Source* getSource(const std::string& sourceID);
     void addSource(std::unique_ptr<style::Source>);
     std::unique_ptr<style::Source> removeSource(const std::string& sourceID);

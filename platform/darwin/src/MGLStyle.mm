@@ -119,13 +119,43 @@ static NSURL *MGLStyleURL_emerald;
 
 #pragma mark Sources
 
+- (NS_MUTABLE_SET_OF(MGLSource *) *)sources {
+    auto rawSources = self.mapView.mbglMap->getSources();
+    NSMutableSet *sources = [NSMutableSet setWithCapacity:rawSources.size()];
+    for (auto rawSource = rawSources.begin(); rawSource != rawSources.end(); ++rawSource) {
+        MGLSource *source = [self sourceFromMBGLSource:*rawSource];
+        [sources addObject:source];
+    }
+    return sources;
+}
+
+- (void)setSources:(NS_MUTABLE_SET_OF(MGLSource *) *)sources {
+    for (MGLSource *source in self.sources) {
+        [self removeSource:source];
+    }
+    for (MGLSource *source in sources) {
+        [self addSource:source];
+    }
+}
+
+- (NSUInteger)countOfSources {
+    auto rawSources = self.mapView.mbglMap->getSources();
+    return rawSources.size();
+}
+
+- (MGLSource *)memberOfSources:(MGLSource *)object {
+    return [self sourceWithIdentifier:object.identifier];
+}
+
 - (MGLSource *)sourceWithIdentifier:(NSString *)identifier
 {
-    auto mbglSource = self.mapView.mbglMap->getSource(identifier.UTF8String);
-    if (!mbglSource) {
-        return nil;
-    }
+    auto rawSource = self.mapView.mbglMap->getSource(identifier.UTF8String);
+    return rawSource ? [self sourceFromMBGLSource:rawSource] : nil;
+}
 
+- (MGLSource *)sourceFromMBGLSource:(mbgl::style::Source *)mbglSource {
+    NSString *identifier = @(mbglSource->getID().c_str());
+    
     // TODO: Fill in options specific to the respective source classes
     // https://github.com/mapbox/mapbox-gl-native/issues/6584
     MGLSource *source;
@@ -368,6 +398,11 @@ static NSURL *MGLStyleURL_emerald;
     mbgl::style::TransitionOptions transition { { MGLDurationInSeconds(transitionDuration) } };
     self.mapView.mbglMap->setTransitionOptions(transition);
     self.mapView.mbglMap->setClasses(newAppliedClasses);
+}
+
+- (NSUInteger)countOfStyleClasses {
+    const auto &classes = self.mapView.mbglMap->getClasses();
+    return classes.size();
 }
 
 - (BOOL)hasStyleClass:(NSString *)styleClass

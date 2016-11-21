@@ -64,6 +64,8 @@ public:
         return lastError;
     }
 
+    std::vector<const Source*> getSources() const;
+    std::vector<Source*> getSources();
     Source* getSource(const std::string& id) const;
     void addSource(std::unique_ptr<Source>);
     std::unique_ptr<Source> removeSource(const std::string& sourceID);
