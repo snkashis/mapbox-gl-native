@@ -127,8 +127,8 @@
 		4018B1C91CDC288A00F666AF /* MGLAnnotationView_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 4018B1C31CDC277F00F666AF /* MGLAnnotationView_Private.h */; };
 		4018B1CA1CDC288E00F666AF /* MGLAnnotationView.h in Headers */ = {isa = PBXBuildFile; fileRef = 4018B1C51CDC277F00F666AF /* MGLAnnotationView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4018B1CB1CDC288E00F666AF /* MGLAnnotationView.h in Headers */ = {isa = PBXBuildFile; fileRef = 4018B1C51CDC277F00F666AF /* MGLAnnotationView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4032C5BF1DE1FC780062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4032C5B81DE1EE7D0062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h */; };
-		4032C5C01DE1FC780062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4032C5B81DE1EE7D0062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h */; };
+		4032C5BF1DE1FC780062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4032C5B81DE1EE7D0062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4032C5C01DE1FC780062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4032C5B81DE1EE7D0062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4032C5C11DE1FC7E0062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4032C5BD1DE1FC690062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.mm */; };
 		4032C5C21DE1FC7E0062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4032C5BD1DE1FC690062E8BD /* NSValue+MGLStyleEnumAttributeAdditions.mm */; };
 		404326891D5B9B27007111BD /* MGLAnnotationContainerView_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 404326881D5B9B1A007111BD /* MGLAnnotationContainerView_Private.h */; };

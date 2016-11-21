@@ -15,36 +15,7 @@
 
 #include <array>
 
-template <typename MBGLType, typename MGLType>
-class MGLStyleEnumerationValueTransformer {
-
-public:
-    MGLStyleValue<NSValue *> * propertyValueMGLStyleValue(mbgl::style::PropertyValue<MBGLType> propertyValue)
-    {
-        if (propertyValue.isFunction())
-        {
-            const auto &mbglStops = propertyValue.asFunction().getStops();
-            NSMutableDictionary *stops = [NSMutableDictionary dictionaryWithCapacity:mbglStops.size()];
-            for (const auto &mbglStop : mbglStops) {
-                auto str = mbgl::Enum<MBGLType>::toString(mbglStop.second);
-                MGLType mglType;
-                mglType = mbgl::Enum<MGLType>::toEnum(str).value_or(mglType);
-                stops[@(mbglStop.first)] = [MGLStyleValue valueWithRawValue:[NSValue value:&mglType withObjCType:@encode(NSUInteger)]];
-            }
-            return [MGLStyleFunction<NSValue *> functionWithBase:propertyValue.asFunction().getBase() stops:stops];
-        }
-        else
-        {
-            auto str = mbgl::Enum<MBGLType>::toString(propertyValue.asConstant());
-            MGLType mglType;
-            mglType = mbgl::Enum<MGLType>::toEnum(str).value_or(mglType);
-            return [MGLStyleConstantValue<NSValue *> valueWithRawValue:[NSValue value:&mglType withObjCType:@encode(NSUInteger)]];
-        }
-    }
-
-};
-
-template <typename MBGLType, typename ObjCType, typename MBGLElement = MBGLType>
+template <typename MBGLType, typename ObjCType, typename MBGLElement = MBGLType, typename ObjCEnum = ObjCType>
 class MGLStyleValueTransformer {
 public:
     
@@ -53,6 +24,25 @@ public:
             return toStyleConstantValue(mbglValue.asConstant());
         } else if (mbglValue.isFunction()) {
             return toStyleFunction(mbglValue.asFunction());
+        } else {
+            return nil;
+        }
+    }
+
+    template <typename MBGLEnum = MBGLType,
+              class = typename std::enable_if<std::is_enum<MBGLEnum>::value>::type,
+              typename MGLEnum = ObjCEnum,
+              class = typename std::enable_if<std::is_enum<MGLEnum>::value>::type>
+    MGLStyleValue<ObjCType> *toEnumStyleValue(const mbgl::style::PropertyValue<MBGLEnum> &mbglValue) {
+        if (mbglValue.isConstant()) {
+            return toEnumStyleConstantValue<>(mbglValue.asConstant());
+        } else if (mbglValue.isFunction()) {
+            const auto &mbglStops = mbglValue.asFunction().getStops();
+            NSMutableDictionary *stops = [NSMutableDictionary dictionaryWithCapacity:mbglStops.size()];
+            for (const auto &mbglStop : mbglStops) {
+                stops[@(mbglStop.first)] = toEnumStyleConstantValue<>(mbglStop.second);
+            }
+            return [MGLStyleFunction<NSValue *> functionWithBase:mbglValue.asFunction().getBase() stops:stops];
         } else {
             return nil;
         }
@@ -83,9 +73,39 @@ public:
             return {};
         }
     }
-    
+
+    template <typename MBGLEnum = MBGLType,
+              class = typename std::enable_if<std::is_enum<MBGLEnum>::value>::type,
+              typename MGLEnum = ObjCEnum,
+              class = typename std::enable_if<std::is_enum<MGLEnum>::value>::type>
+    mbgl::style::PropertyValue<MBGLEnum> toEnumPropertyValue(MGLStyleValue<ObjCType> *value) {
+        if ([value isKindOfClass:[MGLStyleConstantValue class]]) {
+            MBGLEnum mbglValue;
+            getMBGLValue([(MGLStyleConstantValue<ObjCType> *)value rawValue], mbglValue);
+            return mbglValue;
+        } else if ([value isKindOfClass:[MGLStyleFunction class]]) {
+            MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)value;
+            __block std::vector<std::pair<float, MBGLEnum>> mbglStops;
+            [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
+                NSCAssert([stopValue isKindOfClass:[MGLStyleValue class]], @"Stops should be MGLStyleValues");
+                auto mbglStopValue = toEnumPropertyValue(stopValue);
+                NSCAssert(mbglStopValue.isConstant(), @"Stops must be constant");
+                mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
+            }];
+            return mbgl::style::Function<MBGLEnum>({{mbglStops}}, function.base);
+        } else if (value) {
+            [NSException raise:@"MGLAbstractClassException" format:
+             @"The style value %@ cannot be applied to the style. "
+             @"Make sure the style value was created as a member of a concrete subclass of MGLStyleValue.",
+             NSStringFromClass([value class])];
+            return {};
+        } else {
+            return {};
+        }
+    }
+
 private:
-    
+
     MGLStyleConstantValue<ObjCType> *toStyleConstantValue(const MBGLType mbglValue) {
         auto rawValue = toMGLRawStyleValue(mbglValue);
         return [MGLStyleConstantValue<ObjCType> valueWithRawValue:rawValue];
@@ -100,7 +120,17 @@ private:
         }
         return [MGLStyleFunction<ObjCType> functionWithBase:mbglFunction.getBase() stops:stops];
     }
-    
+
+    template <typename MBGLEnum = MBGLType,
+              class = typename std::enable_if<std::is_enum<MBGLEnum>::value>::type,
+              typename MGLEnum = ObjCEnum,
+              class = typename std::enable_if<std::is_enum<MGLEnum>::value>::type>
+    MGLStyleConstantValue<ObjCType> *toEnumStyleConstantValue(const MBGLEnum mbglValue) {
+        auto str = mbgl::Enum<MBGLEnum>::toString(mbglValue);
+        MGLEnum mglType = *mbgl::Enum<MGLEnum>::toEnum(str);
+        return [MGLStyleConstantValue<ObjCType> valueWithRawValue:[NSValue value:&mglType withObjCType:@encode(MGLEnum)]];
+    }
+
     NSNumber *toMGLRawStyleValue(const bool mbglStopValue) {
         return @(mbglStopValue);
     }
@@ -136,7 +166,7 @@ private:
     }
 
 private:
-    
+
     void getMBGLValue(NSNumber *rawValue, bool &mbglValue) {
         mbglValue = !!rawValue.boolValue;
     }
@@ -170,5 +200,17 @@ private:
             getMBGLValue(obj, mbglElement);
             mbglValue.push_back(mbglElement);
         }
+    }
+
+    // Enumerations
+    template <typename MBGLEnum = MBGLType,
+    class = typename std::enable_if<std::is_enum<MBGLEnum>::value>::type,
+    typename MGLEnum = ObjCEnum,
+    class = typename std::enable_if<std::is_enum<MGLEnum>::value>::type>
+    void getMBGLValue(ObjCType rawValue, MBGLEnum &mbglValue) {
+        MGLEnum mglEnum;
+        [rawValue getValue:&mglEnum];
+        auto str = mbgl::Enum<MGLEnum>::toString(mglEnum);
+        mbglValue = *mbgl::Enum<MBGLEnum>::toEnum(str);
     }
 };

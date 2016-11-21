@@ -12,38 +12,42 @@
 
 namespace mbgl {
 
-    using namespace style;
-
     MBGL_DEFINE_ENUM(MGLSymbolPlacement, {
         { MGLSymbolPlacementPoint, "point" },
         { MGLSymbolPlacementLine, "line" },
     });
+
     MBGL_DEFINE_ENUM(MGLIconRotationAlignment, {
         { MGLIconRotationAlignmentMap, "map" },
         { MGLIconRotationAlignmentViewport, "viewport" },
         { MGLIconRotationAlignmentAuto, "auto" },
     });
+
     MBGL_DEFINE_ENUM(MGLIconTextFit, {
         { MGLIconTextFitNone, "none" },
         { MGLIconTextFitWidth, "width" },
         { MGLIconTextFitHeight, "height" },
         { MGLIconTextFitBoth, "both" },
     });
+
     MBGL_DEFINE_ENUM(MGLTextPitchAlignment, {
         { MGLTextPitchAlignmentMap, "map" },
         { MGLTextPitchAlignmentViewport, "viewport" },
         { MGLTextPitchAlignmentAuto, "auto" },
     });
+
     MBGL_DEFINE_ENUM(MGLTextRotationAlignment, {
         { MGLTextRotationAlignmentMap, "map" },
         { MGLTextRotationAlignmentViewport, "viewport" },
         { MGLTextRotationAlignmentAuto, "auto" },
     });
+
     MBGL_DEFINE_ENUM(MGLTextJustify, {
         { MGLTextJustifyLeft, "left" },
         { MGLTextJustifyCenter, "center" },
         { MGLTextJustifyRight, "right" },
     });
+
     MBGL_DEFINE_ENUM(MGLTextAnchor, {
         { MGLTextAnchorCenter, "center" },
         { MGLTextAnchorLeft, "left" },
@@ -55,6 +59,7 @@ namespace mbgl {
         { MGLTextAnchorBottomLeft, "bottom-left" },
         { MGLTextAnchorBottomRight, "bottom-right" },
     });
+
     MBGL_DEFINE_ENUM(MGLTextTransform, {
         { MGLTextTransformNone, "none" },
         { MGLTextTransformUppercase, "uppercase" },
@@ -65,10 +70,12 @@ namespace mbgl {
         { MGLIconTranslateAnchorMap, "map" },
         { MGLIconTranslateAnchorViewport, "viewport" },
     });
+
     MBGL_DEFINE_ENUM(MGLTextTranslateAnchor, {
         { MGLTextTranslateAnchorMap, "map" },
         { MGLTextTranslateAnchorViewport, "viewport" },
     });
+
 }
 
 @interface MGLSymbolStyleLayer ()
@@ -91,8 +98,6 @@ namespace mbgl {
     }
     return self;
 }
-
-
 - (NSString *)sourceLayerIdentifier
 {
     auto layerID = _rawLayer->getSourceLayer();
@@ -113,8 +118,6 @@ namespace mbgl {
 {
     return [NSPredicate mgl_predicateWithFilter:_rawLayer->getFilter()];
 }
-
-
 #pragma mark -  Adding to and removing from a map view
 
 - (void)addToMapView:(MGLMapView *)mapView
@@ -142,34 +145,16 @@ namespace mbgl {
 #pragma mark - Accessing the Layout Attributes
 
 - (void)setSymbolPlacement:(MGLStyleValue<NSValue *> *)symbolPlacement {
-    if ([symbolPlacement isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)symbolPlacement;
-        __block std::vector<std::pair<float, mbgl::style::SymbolPlacementType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLSymbolPlacement symbolPlacementValue;
-            [value getValue:&symbolPlacementValue];
-            auto str = mbgl::Enum<MGLSymbolPlacement>::toString(symbolPlacementValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::SymbolPlacementType>::toEnum(str).value_or(_rawLayer->getDefaultSymbolPlacement().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::SymbolPlacementType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::SymbolPlacementType>({{mbglStops}}, function.base);
-        _rawLayer->setSymbolPlacement(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)symbolPlacement rawValue];
-    MGLSymbolPlacement symbolPlacementValue;
-    [value getValue:&symbolPlacementValue];
-    auto str = mbgl::Enum<MGLSymbolPlacement>::toString(symbolPlacementValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::SymbolPlacementType>::toEnum(str).value_or(_rawLayer->getDefaultSymbolPlacement().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::SymbolPlacementType,
+    NSValue *,
+    mbgl::style::SymbolPlacementType,
+    MGLSymbolPlacement>().toEnumPropertyValue(symbolPlacement);
     _rawLayer->setSymbolPlacement(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)symbolPlacement {
     auto propertyValue = _rawLayer->getSymbolPlacement() ?: _rawLayer->getDefaultSymbolPlacement();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::SymbolPlacementType, MGLSymbolPlacement>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::SymbolPlacementType, NSValue *, mbgl::style::SymbolPlacementType, MGLSymbolPlacement>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setSymbolSpacing:(MGLStyleValue<NSNumber *> *)symbolSpacing {
@@ -223,34 +208,16 @@ namespace mbgl {
 }
 
 - (void)setIconRotationAlignment:(MGLStyleValue<NSValue *> *)iconRotationAlignment {
-    if ([iconRotationAlignment isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)iconRotationAlignment;
-        __block std::vector<std::pair<float, mbgl::style::AlignmentType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLIconRotationAlignment iconRotationAlignmentValue;
-            [value getValue:&iconRotationAlignmentValue];
-            auto str = mbgl::Enum<MGLIconRotationAlignment>::toString(iconRotationAlignmentValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::AlignmentType>::toEnum(str).value_or(_rawLayer->getDefaultIconRotationAlignment().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::AlignmentType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::AlignmentType>({{mbglStops}}, function.base);
-        _rawLayer->setIconRotationAlignment(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)iconRotationAlignment rawValue];
-    MGLIconRotationAlignment iconRotationAlignmentValue;
-    [value getValue:&iconRotationAlignmentValue];
-    auto str = mbgl::Enum<MGLIconRotationAlignment>::toString(iconRotationAlignmentValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::AlignmentType>::toEnum(str).value_or(_rawLayer->getDefaultIconRotationAlignment().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::AlignmentType,
+    NSValue *,
+    mbgl::style::AlignmentType,
+    MGLIconRotationAlignment>().toEnumPropertyValue(iconRotationAlignment);
     _rawLayer->setIconRotationAlignment(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)iconRotationAlignment {
     auto propertyValue = _rawLayer->getIconRotationAlignment() ?: _rawLayer->getDefaultIconRotationAlignment();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::AlignmentType, MGLIconRotationAlignment>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::AlignmentType, NSValue *, mbgl::style::AlignmentType, MGLIconRotationAlignment>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setIconSize:(MGLStyleValue<NSNumber *> *)iconSize {
@@ -264,34 +231,16 @@ namespace mbgl {
 }
 
 - (void)setIconTextFit:(MGLStyleValue<NSValue *> *)iconTextFit {
-    if ([iconTextFit isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)iconTextFit;
-        __block std::vector<std::pair<float, mbgl::style::IconTextFitType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLIconTextFit iconTextFitValue;
-            [value getValue:&iconTextFitValue];
-            auto str = mbgl::Enum<MGLIconTextFit>::toString(iconTextFitValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::IconTextFitType>::toEnum(str).value_or(_rawLayer->getDefaultIconTextFit().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::IconTextFitType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::IconTextFitType>({{mbglStops}}, function.base);
-        _rawLayer->setIconTextFit(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)iconTextFit rawValue];
-    MGLIconTextFit iconTextFitValue;
-    [value getValue:&iconTextFitValue];
-    auto str = mbgl::Enum<MGLIconTextFit>::toString(iconTextFitValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::IconTextFitType>::toEnum(str).value_or(_rawLayer->getDefaultIconTextFit().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::IconTextFitType,
+    NSValue *,
+    mbgl::style::IconTextFitType,
+    MGLIconTextFit>().toEnumPropertyValue(iconTextFit);
     _rawLayer->setIconTextFit(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)iconTextFit {
     auto propertyValue = _rawLayer->getIconTextFit() ?: _rawLayer->getDefaultIconTextFit();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::IconTextFitType, MGLIconTextFit>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::IconTextFitType, NSValue *, mbgl::style::IconTextFitType, MGLIconTextFit>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setIconTextFitPadding:(MGLStyleValue<NSValue *> *)iconTextFitPadding {
@@ -355,65 +304,29 @@ namespace mbgl {
 }
 
 - (void)setTextPitchAlignment:(MGLStyleValue<NSValue *> *)textPitchAlignment {
-    if ([textPitchAlignment isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)textPitchAlignment;
-        __block std::vector<std::pair<float, mbgl::style::AlignmentType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLTextPitchAlignment textPitchAlignmentValue;
-            [value getValue:&textPitchAlignmentValue];
-            auto str = mbgl::Enum<MGLTextPitchAlignment>::toString(textPitchAlignmentValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::AlignmentType>::toEnum(str).value_or(_rawLayer->getDefaultTextPitchAlignment().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::AlignmentType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::AlignmentType>({{mbglStops}}, function.base);
-        _rawLayer->setTextPitchAlignment(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)textPitchAlignment rawValue];
-    MGLTextPitchAlignment textPitchAlignmentValue;
-    [value getValue:&textPitchAlignmentValue];
-    auto str = mbgl::Enum<MGLTextPitchAlignment>::toString(textPitchAlignmentValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::AlignmentType>::toEnum(str).value_or(_rawLayer->getDefaultTextPitchAlignment().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::AlignmentType,
+    NSValue *,
+    mbgl::style::AlignmentType,
+    MGLTextPitchAlignment>().toEnumPropertyValue(textPitchAlignment);
     _rawLayer->setTextPitchAlignment(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)textPitchAlignment {
     auto propertyValue = _rawLayer->getTextPitchAlignment() ?: _rawLayer->getDefaultTextPitchAlignment();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::AlignmentType, MGLTextPitchAlignment>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::AlignmentType, NSValue *, mbgl::style::AlignmentType, MGLTextPitchAlignment>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setTextRotationAlignment:(MGLStyleValue<NSValue *> *)textRotationAlignment {
-    if ([textRotationAlignment isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)textRotationAlignment;
-        __block std::vector<std::pair<float, mbgl::style::AlignmentType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLTextRotationAlignment textRotationAlignmentValue;
-            [value getValue:&textRotationAlignmentValue];
-            auto str = mbgl::Enum<MGLTextRotationAlignment>::toString(textRotationAlignmentValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::AlignmentType>::toEnum(str).value_or(_rawLayer->getDefaultTextRotationAlignment().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::AlignmentType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::AlignmentType>({{mbglStops}}, function.base);
-        _rawLayer->setTextRotationAlignment(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)textRotationAlignment rawValue];
-    MGLTextRotationAlignment textRotationAlignmentValue;
-    [value getValue:&textRotationAlignmentValue];
-    auto str = mbgl::Enum<MGLTextRotationAlignment>::toString(textRotationAlignmentValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::AlignmentType>::toEnum(str).value_or(_rawLayer->getDefaultTextRotationAlignment().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::AlignmentType,
+    NSValue *,
+    mbgl::style::AlignmentType,
+    MGLTextRotationAlignment>().toEnumPropertyValue(textRotationAlignment);
     _rawLayer->setTextRotationAlignment(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)textRotationAlignment {
     auto propertyValue = _rawLayer->getTextRotationAlignment() ?: _rawLayer->getDefaultTextRotationAlignment();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::AlignmentType, MGLTextRotationAlignment>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::AlignmentType, NSValue *, mbgl::style::AlignmentType, MGLTextRotationAlignment>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setTextField:(MGLStyleValue<NSString *> *)textField {
@@ -477,65 +390,29 @@ namespace mbgl {
 }
 
 - (void)setTextJustify:(MGLStyleValue<NSValue *> *)textJustify {
-    if ([textJustify isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)textJustify;
-        __block std::vector<std::pair<float, mbgl::style::TextJustifyType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLTextJustify textJustifyValue;
-            [value getValue:&textJustifyValue];
-            auto str = mbgl::Enum<MGLTextJustify>::toString(textJustifyValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TextJustifyType>::toEnum(str).value_or(_rawLayer->getDefaultTextJustify().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TextJustifyType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TextJustifyType>({{mbglStops}}, function.base);
-        _rawLayer->setTextJustify(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)textJustify rawValue];
-    MGLTextJustify textJustifyValue;
-    [value getValue:&textJustifyValue];
-    auto str = mbgl::Enum<MGLTextJustify>::toString(textJustifyValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TextJustifyType>::toEnum(str).value_or(_rawLayer->getDefaultTextJustify().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TextJustifyType,
+    NSValue *,
+    mbgl::style::TextJustifyType,
+    MGLTextJustify>().toEnumPropertyValue(textJustify);
     _rawLayer->setTextJustify(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)textJustify {
     auto propertyValue = _rawLayer->getTextJustify() ?: _rawLayer->getDefaultTextJustify();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TextJustifyType, MGLTextJustify>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TextJustifyType, NSValue *, mbgl::style::TextJustifyType, MGLTextJustify>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setTextAnchor:(MGLStyleValue<NSValue *> *)textAnchor {
-    if ([textAnchor isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)textAnchor;
-        __block std::vector<std::pair<float, mbgl::style::TextAnchorType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLTextAnchor textAnchorValue;
-            [value getValue:&textAnchorValue];
-            auto str = mbgl::Enum<MGLTextAnchor>::toString(textAnchorValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TextAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultTextAnchor().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TextAnchorType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TextAnchorType>({{mbglStops}}, function.base);
-        _rawLayer->setTextAnchor(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)textAnchor rawValue];
-    MGLTextAnchor textAnchorValue;
-    [value getValue:&textAnchorValue];
-    auto str = mbgl::Enum<MGLTextAnchor>::toString(textAnchorValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TextAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultTextAnchor().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TextAnchorType,
+    NSValue *,
+    mbgl::style::TextAnchorType,
+    MGLTextAnchor>().toEnumPropertyValue(textAnchor);
     _rawLayer->setTextAnchor(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)textAnchor {
     auto propertyValue = _rawLayer->getTextAnchor() ?: _rawLayer->getDefaultTextAnchor();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TextAnchorType, MGLTextAnchor>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TextAnchorType, NSValue *, mbgl::style::TextAnchorType, MGLTextAnchor>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setTextMaxAngle:(MGLStyleValue<NSNumber *> *)textMaxAngle {
@@ -579,34 +456,16 @@ namespace mbgl {
 }
 
 - (void)setTextTransform:(MGLStyleValue<NSValue *> *)textTransform {
-    if ([textTransform isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)textTransform;
-        __block std::vector<std::pair<float, mbgl::style::TextTransformType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLTextTransform textTransformValue;
-            [value getValue:&textTransformValue];
-            auto str = mbgl::Enum<MGLTextTransform>::toString(textTransformValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TextTransformType>::toEnum(str).value_or(_rawLayer->getDefaultTextTransform().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TextTransformType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TextTransformType>({{mbglStops}}, function.base);
-        _rawLayer->setTextTransform(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)textTransform rawValue];
-    MGLTextTransform textTransformValue;
-    [value getValue:&textTransformValue];
-    auto str = mbgl::Enum<MGLTextTransform>::toString(textTransformValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TextTransformType>::toEnum(str).value_or(_rawLayer->getDefaultTextTransform().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TextTransformType,
+    NSValue *,
+    mbgl::style::TextTransformType,
+    MGLTextTransform>().toEnumPropertyValue(textTransform);
     _rawLayer->setTextTransform(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)textTransform {
     auto propertyValue = _rawLayer->getTextTransform() ?: _rawLayer->getDefaultTextTransform();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TextTransformType, MGLTextTransform>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TextTransformType, NSValue *, mbgl::style::TextTransformType, MGLTextTransform>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setTextOffset:(MGLStyleValue<NSValue *> *)textOffset {
@@ -712,34 +571,16 @@ namespace mbgl {
 }
 
 - (void)setIconTranslateAnchor:(MGLStyleValue<NSValue *> *)iconTranslateAnchor {
-    if ([iconTranslateAnchor isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)iconTranslateAnchor;
-        __block std::vector<std::pair<float, mbgl::style::TranslateAnchorType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLIconTranslateAnchor iconTranslateAnchorValue;
-            [value getValue:&iconTranslateAnchorValue];
-            auto str = mbgl::Enum<MGLIconTranslateAnchor>::toString(iconTranslateAnchorValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultIconTranslateAnchor().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TranslateAnchorType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TranslateAnchorType>({{mbglStops}}, function.base);
-        _rawLayer->setIconTranslateAnchor(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)iconTranslateAnchor rawValue];
-    MGLIconTranslateAnchor iconTranslateAnchorValue;
-    [value getValue:&iconTranslateAnchorValue];
-    auto str = mbgl::Enum<MGLIconTranslateAnchor>::toString(iconTranslateAnchorValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultIconTranslateAnchor().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TranslateAnchorType,
+    NSValue *,
+    mbgl::style::TranslateAnchorType,
+    MGLIconTranslateAnchor>().toEnumPropertyValue(iconTranslateAnchor);
     _rawLayer->setIconTranslateAnchor(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)iconTranslateAnchor {
     auto propertyValue = _rawLayer->getIconTranslateAnchor() ?: _rawLayer->getDefaultIconTranslateAnchor();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TranslateAnchorType, MGLIconTranslateAnchor>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TranslateAnchorType, NSValue *, mbgl::style::TranslateAnchorType, MGLIconTranslateAnchor>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setTextOpacity:(MGLStyleValue<NSNumber *> *)textOpacity {
@@ -803,34 +644,16 @@ namespace mbgl {
 }
 
 - (void)setTextTranslateAnchor:(MGLStyleValue<NSValue *> *)textTranslateAnchor {
-    if ([textTranslateAnchor isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)textTranslateAnchor;
-        __block std::vector<std::pair<float, mbgl::style::TranslateAnchorType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLTextTranslateAnchor textTranslateAnchorValue;
-            [value getValue:&textTranslateAnchorValue];
-            auto str = mbgl::Enum<MGLTextTranslateAnchor>::toString(textTranslateAnchorValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultTextTranslateAnchor().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TranslateAnchorType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TranslateAnchorType>({{mbglStops}}, function.base);
-        _rawLayer->setTextTranslateAnchor(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)textTranslateAnchor rawValue];
-    MGLTextTranslateAnchor textTranslateAnchorValue;
-    [value getValue:&textTranslateAnchorValue];
-    auto str = mbgl::Enum<MGLTextTranslateAnchor>::toString(textTranslateAnchorValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultTextTranslateAnchor().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TranslateAnchorType,
+    NSValue *,
+    mbgl::style::TranslateAnchorType,
+    MGLTextTranslateAnchor>().toEnumPropertyValue(textTranslateAnchor);
     _rawLayer->setTextTranslateAnchor(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)textTranslateAnchor {
     auto propertyValue = _rawLayer->getTextTranslateAnchor() ?: _rawLayer->getDefaultTextTranslateAnchor();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TranslateAnchorType, MGLTextTranslateAnchor>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TranslateAnchorType, NSValue *, mbgl::style::TranslateAnchorType, MGLTextTranslateAnchor>().toEnumStyleValue(propertyValue);
 }
 
 

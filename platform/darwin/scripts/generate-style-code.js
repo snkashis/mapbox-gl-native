@@ -355,6 +355,9 @@ for (var layer of layers) {
     allLayoutProperties.push(layer.layoutProperties);
     allPaintProperties.push(layer.paintProperties);
     allTypes.push(layer.type);
+    const containsEnumerationProperties =  _.filter(layer.layoutProperties, function(property){ return property["type"] === "enum"; }).length  || _.filter(layer.paintProperties, function(property){ return property["type"] === "enum"; }).length;
+    layer.containsEnumerationProperties = containsEnumerationProperties;
+    
     fs.writeFileSync(`platform/darwin/src/${prefix}${camelize(layer.type)}${suffix}.h`, duplicatePlatformDecls(layerH(layer)));
     fs.writeFileSync(`platform/darwin/src/${prefix}${camelize(layer.type)}${suffix}.mm`, layerM(layer));
     fs.writeFileSync(`platform/darwin/test/${prefix}${camelize(layer.type)}${suffix}Tests.m`, testLayers(layer));

@@ -5,68 +5,164 @@
 
 @implementation NSValue (MGLStyleEnumAttributeAdditions)
 
-+ (NSValue *)valueWithMGLLineCap:(MGLLineCap)type {
-    return [NSValue value:&type withObjCType:@encode(MGLLineCap)];
++ (NSValue *)valueWithMGLLineCap:(MGLLineCap)lineCap {
+    return [NSValue value:&lineCap withObjCType:@encode(MGLLineCap)];
 }
 
-+ (NSValue *)valueWithMGLLineJoin:(MGLLineJoin)type {
-    return [NSValue value:&type withObjCType:@encode(MGLLineJoin)];
+- (MGLLineCap)lineCap {
+    MGLLineCap value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLSymbolPlacement:(MGLSymbolPlacement)type {
-    return [NSValue value:&type withObjCType:@encode(MGLSymbolPlacement)];
++ (NSValue *)valueWithMGLLineJoin:(MGLLineJoin)lineJoin {
+    return [NSValue value:&lineJoin withObjCType:@encode(MGLLineJoin)];
 }
 
-+ (NSValue *)valueWithMGLIconRotationAlignment:(MGLIconRotationAlignment)type {
-    return [NSValue value:&type withObjCType:@encode(MGLIconRotationAlignment)];
+- (MGLLineJoin)lineJoin {
+    MGLLineJoin value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLIconTextFit:(MGLIconTextFit)type {
-    return [NSValue value:&type withObjCType:@encode(MGLIconTextFit)];
++ (NSValue *)valueWithMGLSymbolPlacement:(MGLSymbolPlacement)symbolPlacement {
+    return [NSValue value:&symbolPlacement withObjCType:@encode(MGLSymbolPlacement)];
 }
 
-+ (NSValue *)valueWithMGLTextPitchAlignment:(MGLTextPitchAlignment)type {
-    return [NSValue value:&type withObjCType:@encode(MGLTextPitchAlignment)];
+- (MGLSymbolPlacement)symbolPlacement {
+    MGLSymbolPlacement value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLTextRotationAlignment:(MGLTextRotationAlignment)type {
-    return [NSValue value:&type withObjCType:@encode(MGLTextRotationAlignment)];
++ (NSValue *)valueWithMGLIconRotationAlignment:(MGLIconRotationAlignment)iconRotationAlignment {
+    return [NSValue value:&iconRotationAlignment withObjCType:@encode(MGLIconRotationAlignment)];
 }
 
-+ (NSValue *)valueWithMGLTextJustify:(MGLTextJustify)type {
-    return [NSValue value:&type withObjCType:@encode(MGLTextJustify)];
+- (MGLIconRotationAlignment)iconRotationAlignment {
+    MGLIconRotationAlignment value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLTextAnchor:(MGLTextAnchor)type {
-    return [NSValue value:&type withObjCType:@encode(MGLTextAnchor)];
++ (NSValue *)valueWithMGLIconTextFit:(MGLIconTextFit)iconTextFit {
+    return [NSValue value:&iconTextFit withObjCType:@encode(MGLIconTextFit)];
 }
 
-+ (NSValue *)valueWithMGLTextTransform:(MGLTextTransform)type {
-    return [NSValue value:&type withObjCType:@encode(MGLTextTransform)];
+- (MGLIconTextFit)iconTextFit {
+    MGLIconTextFit value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLFillTranslateAnchor:(MGLFillTranslateAnchor)type {
-return [NSValue value:&type withObjCType:@encode(MGLFillTranslateAnchor)];
++ (NSValue *)valueWithMGLTextPitchAlignment:(MGLTextPitchAlignment)textPitchAlignment {
+    return [NSValue value:&textPitchAlignment withObjCType:@encode(MGLTextPitchAlignment)];
 }
 
-+ (NSValue *)valueWithMGLLineTranslateAnchor:(MGLLineTranslateAnchor)type {
-return [NSValue value:&type withObjCType:@encode(MGLLineTranslateAnchor)];
+- (MGLTextPitchAlignment)textPitchAlignment {
+    MGLTextPitchAlignment value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLIconTranslateAnchor:(MGLIconTranslateAnchor)type {
-return [NSValue value:&type withObjCType:@encode(MGLIconTranslateAnchor)];
++ (NSValue *)valueWithMGLTextRotationAlignment:(MGLTextRotationAlignment)textRotationAlignment {
+    return [NSValue value:&textRotationAlignment withObjCType:@encode(MGLTextRotationAlignment)];
 }
 
-+ (NSValue *)valueWithMGLTextTranslateAnchor:(MGLTextTranslateAnchor)type {
-return [NSValue value:&type withObjCType:@encode(MGLTextTranslateAnchor)];
+- (MGLTextRotationAlignment)textRotationAlignment {
+    MGLTextRotationAlignment value;
+    [self getValue:&value];
+    return value;
 }
 
-+ (NSValue *)valueWithMGLCircleTranslateAnchor:(MGLCircleTranslateAnchor)type {
-return [NSValue value:&type withObjCType:@encode(MGLCircleTranslateAnchor)];
++ (NSValue *)valueWithMGLTextJustify:(MGLTextJustify)textJustify {
+    return [NSValue value:&textJustify withObjCType:@encode(MGLTextJustify)];
 }
 
-+ (NSValue *)valueWithMGLCirclePitchScale:(MGLCirclePitchScale)type {
-return [NSValue value:&type withObjCType:@encode(MGLCirclePitchScale)];
+- (MGLTextJustify)textJustify {
+    MGLTextJustify value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLTextAnchor:(MGLTextAnchor)textAnchor {
+    return [NSValue value:&textAnchor withObjCType:@encode(MGLTextAnchor)];
+}
+
+- (MGLTextAnchor)textAnchor {
+    MGLTextAnchor value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLTextTransform:(MGLTextTransform)textTransform {
+    return [NSValue value:&textTransform withObjCType:@encode(MGLTextTransform)];
+}
+
+- (MGLTextTransform)textTransform {
+    MGLTextTransform value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLFillTranslateAnchor:(MGLFillTranslateAnchor)fillTranslateAnchor {
+return [NSValue value:&fillTranslateAnchor withObjCType:@encode(MGLFillTranslateAnchor)];
+}
+
+- (MGLFillTranslateAnchor)fillTranslateAnchor {
+    MGLFillTranslateAnchor value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLLineTranslateAnchor:(MGLLineTranslateAnchor)lineTranslateAnchor {
+return [NSValue value:&lineTranslateAnchor withObjCType:@encode(MGLLineTranslateAnchor)];
+}
+
+- (MGLLineTranslateAnchor)lineTranslateAnchor {
+    MGLLineTranslateAnchor value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLIconTranslateAnchor:(MGLIconTranslateAnchor)iconTranslateAnchor {
+return [NSValue value:&iconTranslateAnchor withObjCType:@encode(MGLIconTranslateAnchor)];
+}
+
+- (MGLIconTranslateAnchor)iconTranslateAnchor {
+    MGLIconTranslateAnchor value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLTextTranslateAnchor:(MGLTextTranslateAnchor)textTranslateAnchor {
+return [NSValue value:&textTranslateAnchor withObjCType:@encode(MGLTextTranslateAnchor)];
+}
+
+- (MGLTextTranslateAnchor)textTranslateAnchor {
+    MGLTextTranslateAnchor value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLCircleTranslateAnchor:(MGLCircleTranslateAnchor)circleTranslateAnchor {
+return [NSValue value:&circleTranslateAnchor withObjCType:@encode(MGLCircleTranslateAnchor)];
+}
+
+- (MGLCircleTranslateAnchor)circleTranslateAnchor {
+    MGLCircleTranslateAnchor value;
+    [self getValue:&value];
+    return value;
+}
+
++ (NSValue *)valueWithMGLCirclePitchScale:(MGLCirclePitchScale)circlePitchScale {
+return [NSValue value:&circlePitchScale withObjCType:@encode(MGLCirclePitchScale)];
+}
+
+- (MGLCirclePitchScale)circlePitchScale {
+    MGLCirclePitchScale value;
+    [self getValue:&value];
+    return value;
 }
 
 

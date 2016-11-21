@@ -13,8 +13,14 @@ const paintProperties = locals.paintProperties;
 <% if (layoutProperties.length) { -%>
 <% for (const property of layoutProperties) { -%>
 <% if (property.type == "enum") { -%>
-+ (NSValue *)valueWithMGL<%- camelize(property.name) %>:(MGL<%- camelize(property.name) %>)type {
-    return [NSValue value:&type withObjCType:@encode(MGL<%- camelize(property.name) %>)];
++ (NSValue *)valueWithMGL<%- camelize(property.name) %>:(MGL<%- camelize(property.name) %>)<%- objCName(property) %> {
+    return [NSValue value:&<%- objCName(property) %> withObjCType:@encode(MGL<%- camelize(property.name) %>)];
+}
+
+- (MGL<%- camelize(property.name) %>)<%- objCName(property) %> {
+    MGL<%- camelize(property.name) %> value;
+    [self getValue:&value];
+    return value;
 }
 
 <% } -%>
@@ -23,8 +29,14 @@ const paintProperties = locals.paintProperties;
 <% if (paintProperties.length) { -%>
 <% for (const property of paintProperties) { -%>
 <% if (property.type == "enum") { -%>
-+ (NSValue *)valueWithMGL<%- camelize(property.name) %>:(MGL<%- camelize(property.name) %>)type {
-return [NSValue value:&type withObjCType:@encode(MGL<%- camelize(property.name) %>)];
++ (NSValue *)valueWithMGL<%- camelize(property.name) %>:(MGL<%- camelize(property.name) %>)<%- objCName(property) %> {
+return [NSValue value:&<%- objCName(property) %> withObjCType:@encode(MGL<%- camelize(property.name) %>)];
+}
+
+- (MGL<%- camelize(property.name) %>)<%- objCName(property) %> {
+    MGL<%- camelize(property.name) %> value;
+    [self getValue:&value];
+    return value;
 }
 
 <% } -%>

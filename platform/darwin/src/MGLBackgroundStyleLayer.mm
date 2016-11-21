@@ -10,12 +10,6 @@
 
 #include <mbgl/style/layers/background_layer.hpp>
 
-namespace mbgl {
-
-    using namespace style;
-
-
-}
 
 @interface MGLBackgroundStyleLayer ()
 
@@ -37,8 +31,6 @@ namespace mbgl {
     }
     return self;
 }
-
-
 
 #pragma mark -  Adding to and removing from a map view
 

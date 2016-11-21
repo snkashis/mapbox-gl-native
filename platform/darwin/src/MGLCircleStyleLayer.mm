@@ -12,17 +12,16 @@
 
 namespace mbgl {
 
-    using namespace style;
-
-
     MBGL_DEFINE_ENUM(MGLCircleTranslateAnchor, {
         { MGLCircleTranslateAnchorMap, "map" },
         { MGLCircleTranslateAnchorViewport, "viewport" },
     });
+
     MBGL_DEFINE_ENUM(MGLCirclePitchScale, {
         { MGLCirclePitchScaleMap, "map" },
         { MGLCirclePitchScaleViewport, "viewport" },
     });
+
 }
 
 @interface MGLCircleStyleLayer ()
@@ -45,8 +44,6 @@ namespace mbgl {
     }
     return self;
 }
-
-
 - (NSString *)sourceLayerIdentifier
 {
     auto layerID = _rawLayer->getSourceLayer();
@@ -67,8 +64,6 @@ namespace mbgl {
 {
     return [NSPredicate mgl_predicateWithFilter:_rawLayer->getFilter()];
 }
-
-
 #pragma mark -  Adding to and removing from a map view
 
 - (void)addToMapView:(MGLMapView *)mapView
@@ -146,65 +141,29 @@ namespace mbgl {
 }
 
 - (void)setCircleTranslateAnchor:(MGLStyleValue<NSValue *> *)circleTranslateAnchor {
-    if ([circleTranslateAnchor isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)circleTranslateAnchor;
-        __block std::vector<std::pair<float, mbgl::style::TranslateAnchorType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLCircleTranslateAnchor circleTranslateAnchorValue;
-            [value getValue:&circleTranslateAnchorValue];
-            auto str = mbgl::Enum<MGLCircleTranslateAnchor>::toString(circleTranslateAnchorValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultCircleTranslateAnchor().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TranslateAnchorType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TranslateAnchorType>({{mbglStops}}, function.base);
-        _rawLayer->setCircleTranslateAnchor(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)circleTranslateAnchor rawValue];
-    MGLCircleTranslateAnchor circleTranslateAnchorValue;
-    [value getValue:&circleTranslateAnchorValue];
-    auto str = mbgl::Enum<MGLCircleTranslateAnchor>::toString(circleTranslateAnchorValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultCircleTranslateAnchor().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TranslateAnchorType,
+    NSValue *,
+    mbgl::style::TranslateAnchorType,
+    MGLCircleTranslateAnchor>().toEnumPropertyValue(circleTranslateAnchor);
     _rawLayer->setCircleTranslateAnchor(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)circleTranslateAnchor {
     auto propertyValue = _rawLayer->getCircleTranslateAnchor() ?: _rawLayer->getDefaultCircleTranslateAnchor();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TranslateAnchorType, MGLCircleTranslateAnchor>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TranslateAnchorType, NSValue *, mbgl::style::TranslateAnchorType, MGLCircleTranslateAnchor>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setCirclePitchScale:(MGLStyleValue<NSValue *> *)circlePitchScale {
-    if ([circlePitchScale isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)circlePitchScale;
-        __block std::vector<std::pair<float, mbgl::style::CirclePitchScaleType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLCirclePitchScale circlePitchScaleValue;
-            [value getValue:&circlePitchScaleValue];
-            auto str = mbgl::Enum<MGLCirclePitchScale>::toString(circlePitchScaleValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::CirclePitchScaleType>::toEnum(str).value_or(_rawLayer->getDefaultCirclePitchScale().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::CirclePitchScaleType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::CirclePitchScaleType>({{mbglStops}}, function.base);
-        _rawLayer->setCirclePitchScale(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)circlePitchScale rawValue];
-    MGLCirclePitchScale circlePitchScaleValue;
-    [value getValue:&circlePitchScaleValue];
-    auto str = mbgl::Enum<MGLCirclePitchScale>::toString(circlePitchScaleValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::CirclePitchScaleType>::toEnum(str).value_or(_rawLayer->getDefaultCirclePitchScale().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::CirclePitchScaleType,
+    NSValue *,
+    mbgl::style::CirclePitchScaleType,
+    MGLCirclePitchScale>().toEnumPropertyValue(circlePitchScale);
     _rawLayer->setCirclePitchScale(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)circlePitchScale {
     auto propertyValue = _rawLayer->getCirclePitchScale() ?: _rawLayer->getDefaultCirclePitchScale();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::CirclePitchScaleType, MGLCirclePitchScale>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::CirclePitchScaleType, NSValue *, mbgl::style::CirclePitchScaleType, MGLCirclePitchScale>().toEnumStyleValue(propertyValue);
 }
 
 

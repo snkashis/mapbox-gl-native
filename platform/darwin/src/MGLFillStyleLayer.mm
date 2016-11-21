@@ -12,13 +12,11 @@
 
 namespace mbgl {
 
-    using namespace style;
-
-
     MBGL_DEFINE_ENUM(MGLFillTranslateAnchor, {
         { MGLFillTranslateAnchorMap, "map" },
         { MGLFillTranslateAnchorViewport, "viewport" },
     });
+
 }
 
 @interface MGLFillStyleLayer ()
@@ -41,8 +39,6 @@ namespace mbgl {
     }
     return self;
 }
-
-
 - (NSString *)sourceLayerIdentifier
 {
     auto layerID = _rawLayer->getSourceLayer();
@@ -63,8 +59,6 @@ namespace mbgl {
 {
     return [NSPredicate mgl_predicateWithFilter:_rawLayer->getFilter()];
 }
-
-
 #pragma mark -  Adding to and removing from a map view
 
 - (void)addToMapView:(MGLMapView *)mapView
@@ -142,34 +136,16 @@ namespace mbgl {
 }
 
 - (void)setFillTranslateAnchor:(MGLStyleValue<NSValue *> *)fillTranslateAnchor {
-    if ([fillTranslateAnchor isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)fillTranslateAnchor;
-        __block std::vector<std::pair<float, mbgl::style::TranslateAnchorType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLFillTranslateAnchor fillTranslateAnchorValue;
-            [value getValue:&fillTranslateAnchorValue];
-            auto str = mbgl::Enum<MGLFillTranslateAnchor>::toString(fillTranslateAnchorValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultFillTranslateAnchor().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TranslateAnchorType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TranslateAnchorType>({{mbglStops}}, function.base);
-        _rawLayer->setFillTranslateAnchor(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)fillTranslateAnchor rawValue];
-    MGLFillTranslateAnchor fillTranslateAnchorValue;
-    [value getValue:&fillTranslateAnchorValue];
-    auto str = mbgl::Enum<MGLFillTranslateAnchor>::toString(fillTranslateAnchorValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultFillTranslateAnchor().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TranslateAnchorType,
+    NSValue *,
+    mbgl::style::TranslateAnchorType,
+    MGLFillTranslateAnchor>().toEnumPropertyValue(fillTranslateAnchor);
     _rawLayer->setFillTranslateAnchor(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)fillTranslateAnchor {
     auto propertyValue = _rawLayer->getFillTranslateAnchor() ?: _rawLayer->getDefaultFillTranslateAnchor();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TranslateAnchorType, MGLFillTranslateAnchor>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TranslateAnchorType, NSValue *, mbgl::style::TranslateAnchorType, MGLFillTranslateAnchor>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setFillPattern:(MGLStyleValue<NSString *> *)fillPattern {

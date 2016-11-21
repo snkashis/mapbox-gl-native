@@ -12,13 +12,12 @@
 
 namespace mbgl {
 
-    using namespace style;
-
     MBGL_DEFINE_ENUM(MGLLineCap, {
         { MGLLineCapButt, "butt" },
         { MGLLineCapRound, "round" },
         { MGLLineCapSquare, "square" },
     });
+
     MBGL_DEFINE_ENUM(MGLLineJoin, {
         { MGLLineJoinBevel, "bevel" },
         { MGLLineJoinRound, "round" },
@@ -29,6 +28,7 @@ namespace mbgl {
         { MGLLineTranslateAnchorMap, "map" },
         { MGLLineTranslateAnchorViewport, "viewport" },
     });
+
 }
 
 @interface MGLLineStyleLayer ()
@@ -51,8 +51,6 @@ namespace mbgl {
     }
     return self;
 }
-
-
 - (NSString *)sourceLayerIdentifier
 {
     auto layerID = _rawLayer->getSourceLayer();
@@ -73,8 +71,6 @@ namespace mbgl {
 {
     return [NSPredicate mgl_predicateWithFilter:_rawLayer->getFilter()];
 }
-
-
 #pragma mark -  Adding to and removing from a map view
 
 - (void)addToMapView:(MGLMapView *)mapView
@@ -102,65 +98,29 @@ namespace mbgl {
 #pragma mark - Accessing the Layout Attributes
 
 - (void)setLineCap:(MGLStyleValue<NSValue *> *)lineCap {
-    if ([lineCap isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)lineCap;
-        __block std::vector<std::pair<float, mbgl::style::LineCapType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLLineCap lineCapValue;
-            [value getValue:&lineCapValue];
-            auto str = mbgl::Enum<MGLLineCap>::toString(lineCapValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::LineCapType>::toEnum(str).value_or(_rawLayer->getDefaultLineCap().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::LineCapType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::LineCapType>({{mbglStops}}, function.base);
-        _rawLayer->setLineCap(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)lineCap rawValue];
-    MGLLineCap lineCapValue;
-    [value getValue:&lineCapValue];
-    auto str = mbgl::Enum<MGLLineCap>::toString(lineCapValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::LineCapType>::toEnum(str).value_or(_rawLayer->getDefaultLineCap().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::LineCapType,
+    NSValue *,
+    mbgl::style::LineCapType,
+    MGLLineCap>().toEnumPropertyValue(lineCap);
     _rawLayer->setLineCap(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)lineCap {
     auto propertyValue = _rawLayer->getLineCap() ?: _rawLayer->getDefaultLineCap();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::LineCapType, MGLLineCap>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::LineCapType, NSValue *, mbgl::style::LineCapType, MGLLineCap>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setLineJoin:(MGLStyleValue<NSValue *> *)lineJoin {
-    if ([lineJoin isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)lineJoin;
-        __block std::vector<std::pair<float, mbgl::style::LineJoinType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLLineJoin lineJoinValue;
-            [value getValue:&lineJoinValue];
-            auto str = mbgl::Enum<MGLLineJoin>::toString(lineJoinValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::LineJoinType>::toEnum(str).value_or(_rawLayer->getDefaultLineJoin().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::LineJoinType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::LineJoinType>({{mbglStops}}, function.base);
-        _rawLayer->setLineJoin(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)lineJoin rawValue];
-    MGLLineJoin lineJoinValue;
-    [value getValue:&lineJoinValue];
-    auto str = mbgl::Enum<MGLLineJoin>::toString(lineJoinValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::LineJoinType>::toEnum(str).value_or(_rawLayer->getDefaultLineJoin().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::LineJoinType,
+    NSValue *,
+    mbgl::style::LineJoinType,
+    MGLLineJoin>().toEnumPropertyValue(lineJoin);
     _rawLayer->setLineJoin(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)lineJoin {
     auto propertyValue = _rawLayer->getLineJoin() ?: _rawLayer->getDefaultLineJoin();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::LineJoinType, MGLLineJoin>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::LineJoinType, NSValue *, mbgl::style::LineJoinType, MGLLineJoin>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setLineMiterLimit:(MGLStyleValue<NSNumber *> *)lineMiterLimit {
@@ -216,34 +176,16 @@ namespace mbgl {
 }
 
 - (void)setLineTranslateAnchor:(MGLStyleValue<NSValue *> *)lineTranslateAnchor {
-    if ([lineTranslateAnchor isKindOfClass:[MGLStyleFunction class]]) {
-        MGLStyleFunction<NSValue *> *function = (MGLStyleFunction<NSValue *> *)lineTranslateAnchor;
-        __block std::vector<std::pair<float, mbgl::style::TranslateAnchorType>> mbglStops;
-        [function.stops enumerateKeysAndObjectsUsingBlock:^(NSNumber * _Nonnull zoomKey, MGLStyleValue<NSValue *> * _Nonnull stopValue, BOOL * _Nonnull stop) {
-            id value = [(MGLStyleConstantValue<NSValue *> *)stopValue rawValue];
-            MGLLineTranslateAnchor lineTranslateAnchorValue;
-            [value getValue:&lineTranslateAnchorValue];
-            auto str = mbgl::Enum<MGLLineTranslateAnchor>::toString(lineTranslateAnchorValue);
-            auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultLineTranslateAnchor().asConstant());
-            auto mbglStopValue = mbgl::style::PropertyValue<mbgl::style::TranslateAnchorType>(mbglValue);
-            mbglStops.emplace_back(zoomKey.floatValue, mbglStopValue.asConstant());
-        }];
-        auto func = mbgl::style::Function<mbgl::style::TranslateAnchorType>({{mbglStops}}, function.base);
-        _rawLayer->setLineTranslateAnchor(func);
-        return;
-    }
-    id value = [(MGLStyleConstantValue<NSValue *> *)lineTranslateAnchor rawValue];
-    MGLLineTranslateAnchor lineTranslateAnchorValue;
-    [value getValue:&lineTranslateAnchorValue];
-    auto str = mbgl::Enum<MGLLineTranslateAnchor>::toString(lineTranslateAnchorValue);
-    auto mbglValue = mbgl::Enum<mbgl::style::TranslateAnchorType>::toEnum(str).value_or(_rawLayer->getDefaultLineTranslateAnchor().asConstant());
+    auto mbglValue = MGLStyleValueTransformer<mbgl::style::TranslateAnchorType,
+    NSValue *,
+    mbgl::style::TranslateAnchorType,
+    MGLLineTranslateAnchor>().toEnumPropertyValue(lineTranslateAnchor);
     _rawLayer->setLineTranslateAnchor(mbglValue);
 }
 
 - (MGLStyleValue<NSValue *> *)lineTranslateAnchor {
     auto propertyValue = _rawLayer->getLineTranslateAnchor() ?: _rawLayer->getDefaultLineTranslateAnchor();
-    
-    return MGLStyleEnumerationValueTransformer<mbgl::style::TranslateAnchorType, MGLLineTranslateAnchor>().propertyValueMGLStyleValue(propertyValue);
+    return MGLStyleValueTransformer<mbgl::style::TranslateAnchorType, NSValue *, mbgl::style::TranslateAnchorType, MGLLineTranslateAnchor>().toEnumStyleValue(propertyValue);
 }
 
 - (void)setLineWidth:(MGLStyleValue<NSNumber *> *)lineWidth {

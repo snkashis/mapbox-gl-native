@@ -5,7 +5,6 @@
 #import "MBXOfflinePacksTableViewController.h"
 #import "MBXAnnotationView.h"
 #import "MBXUserLocationAnnotationView.h"
-#import "NSValue+MGLStyleEnumAttributeAdditions.h"
 
 #import "MGLFillStyleLayer.h"
 
@@ -72,6 +71,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsRuntimeStylingRows) {
     MBXSettingsRuntimeStylingVectorSource,
     MBXSettingsRuntimeStylingRasterSource,
     MBXSettingsRuntimeStylingCountryLabels,
+    MBXSettingsRuntimeStylingRouteLine,
 };
 
 typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
@@ -333,6 +333,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                 @"Style Vector Source",
                 @"Style Raster Source",
                 [NSString stringWithFormat:@"Label Countries in %@", (_usingLocaleBasedCountryLabels ? @"Local Language" : [[NSLocale currentLocale] displayNameForKey:NSLocaleIdentifier value:[self bestLanguageForUser]])],
+                @"Add Route Line",
             ]];
             break;
         case MBXSettingsMiscellaneous:
@@ -490,6 +491,9 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                     break;
                 case MBXSettingsRuntimeStylingCountryLabels:
                     [self styleCountryLabelsLanguage];
+                    break;
+                case MBXSettingsRuntimeStylingRouteLine:
+                    [self styleRouteLine];
                     break;
                 default:
                     NSAssert(NO, @"All runtime styling setting rows should be implemented");
@@ -831,47 +835,6 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 
 - (void)styleFilteredLines
 {
-
-#warning remove this test stub
-
-    NSURL *customStyleURL = [[NSURL alloc] initWithString:@"mapbox://styles/boundsj/cipk5wcrv0052cvnfzx8lnbf3"];
-    [self.mapView setStyleURL:customStyleURL];
-
-
-    // fetch the line layer after a second to give it time to load
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-
-        MGLLineStyleLayer *randomLineLayer = (MGLLineStyleLayer *)[self.mapView.style layerWithIdentifier:@"random-line"];
-
-        randomLineLayer.lineJoin = [MGLStyleValue valueWithRawValue:[NSValue valueWithMGLLineJoin:MGLLineJoinMiter]];
-
-        MGLStyleConstantValue *lineJoin = (MGLStyleConstantValue *)randomLineLayer.lineJoin;
-        NSValue *join = (NSValue *)lineJoin.rawValue;
-        MGLLineJoin finalJoin;
-        [join getValue:&finalJoin];
-        NSLog(@"================> join %ld", finalJoin);
-
-        randomLineLayer.lineCap = [MBXViewController testEnumFunction:MGLLineCapRound type:@encode(MGLLineCap)];
-        MGLStyleFunction *lineCapFunc = (MGLStyleFunction *)randomLineLayer.lineCap;
-        MGLStyleConstantValue *firstStop = (MGLStyleConstantValue *)lineCapFunc.stops[@18];
-        NSValue *cap = (NSValue *)firstStop.rawValue;
-        MGLLineCap finalCap;
-        [cap getValue:&finalCap];
-        NSLog(@"================> cap %ld", finalCap);
-
-        randomLineLayer.lineTranslateAnchor = [MBXViewController testEnumFunction:MGLLineTranslateAnchorViewport type:@encode(MGLLineTranslateAnchor)];
-        MGLStyleFunction *lineTransFunc = (MGLStyleFunction *)randomLineLayer.lineTranslateAnchor;
-        MGLStyleConstantValue *lineTransFuncFirstStop = (MGLStyleConstantValue *)lineTransFunc.stops[@18];
-        NSValue *lineTransValue = (NSValue *)lineTransFuncFirstStop.rawValue;
-        MGLLineCap finalLineTrans;
-        [lineTransValue getValue:&finalLineTrans];
-        NSLog(@"================> cap %ld", finalLineTrans);
-    });
-    return;
-
-
-#warning reenable this test
-
     // set style and focus on lower 48
     [self.mapView setStyleURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"line_filter_style" ofType:@"json"]]];
     [self.mapView setCenterCoordinate:CLLocationCoordinate2DMake(40, -97) zoomLevel:5 animated:NO];
@@ -1133,6 +1096,44 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
         @"country-label-sm",
     ];
     [self styleLabelLanguageForLayersNamed:labelLayers];
+}
+
+- (void)styleRouteLine
+{
+    CLLocationCoordinate2D coords[] = {
+        { 43.84455590478528, 10.504238605499268 },
+        { 43.84385562343126, 10.504125952720642 },
+        { 43.84388657526694, 10.503299832344055 },
+        { 43.84332557075269, 10.503235459327698 },
+        { 43.843441641085036, 10.502264499664307 },
+        { 43.84396395478592, 10.50242006778717 },
+        { 43.84406067904351, 10.501744151115416 },
+        { 43.84422317544319, 10.501792430877686 }
+    };
+    NSInteger count = sizeof(coords) / sizeof(coords[0]);
+
+    [self.mapView setCenterCoordinate:coords[0] zoomLevel:16 animated:YES];
+
+    MGLPolylineFeature *routeLine = [MGLPolylineFeature polylineWithCoordinates:coords count:count];
+
+    MGLGeoJSONSource *routeSource = [[MGLGeoJSONSource alloc] initWithIdentifier:@"style-route-source" features:@[routeLine] options:nil];
+    [self.mapView.style addSource:routeSource];
+
+    MGLLineStyleLayer *baseRouteLayer = [[MGLLineStyleLayer alloc] initWithIdentifier:@"style-base-route-layer" source:routeSource];
+    baseRouteLayer.lineColor = [MGLStyleConstantValue valueWithRawValue:[UIColor orangeColor]];
+    baseRouteLayer.lineWidth = [MGLStyleConstantValue valueWithRawValue:@20];
+    baseRouteLayer.lineOpacity = [MGLStyleConstantValue valueWithRawValue:@0.5];
+    baseRouteLayer.lineCap = [MGLStyleConstantValue valueWithRawValue:[NSValue valueWithMGLLineCap:MGLLineCapRound]];
+    baseRouteLayer.lineJoin = [MGLStyleConstantValue valueWithRawValue:[NSValue valueWithMGLLineJoin:MGLLineJoinRound]];
+    [self.mapView.style addLayer:baseRouteLayer];
+
+    MGLLineStyleLayer *routeLayer = [[MGLLineStyleLayer alloc] initWithIdentifier:@"style-base-route-layer" source:routeSource];
+    routeLayer.lineColor = [MGLStyleConstantValue valueWithRawValue:[UIColor whiteColor]];
+    routeLayer.lineWidth = [MGLStyleConstantValue valueWithRawValue:@15];
+    routeLayer.lineOpacity = [MGLStyleConstantValue valueWithRawValue:@0.8];
+    routeLayer.lineCap = [MGLStyleConstantValue valueWithRawValue:[NSValue valueWithMGLLineCap:MGLLineCapRound]];
+    routeLayer.lineJoin = [MGLStyleConstantValue valueWithRawValue:[NSValue valueWithMGLLineJoin:MGLLineJoinRound]];
+    [self.mapView.style addLayer:routeLayer];
 }
 
 - (void)styleLabelLanguageForLayersNamed:(NSArray<NSString *> *)layers
