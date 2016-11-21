@@ -2,6 +2,9 @@
 #include <mbgl/platform/log.hpp>
 #include <mbgl/math/minmax.hpp>
 #include <mbgl/util/i18n.hpp>
+#include <mbgl/util/utf.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 #include <cassert>
 #include <algorithm>
@@ -32,6 +35,14 @@ const std::map<uint32_t, SDFGlyph> &GlyphSet::getSDFs() const {
     return sdfs;
 }
 
+std::u16string trim(const std::u16string& input)
+{
+    // We have to round-trip to UTF8 to use boost::algorithm::trim because ctype<char16_t> isn't defined in our STL
+    std::string u8string = util::utf16_to_utf8::convert(input);
+    boost::algorithm::trim(u8string);
+    return util::utf8_to_utf16::convert(u8string);
+}
+
 const Shaping GlyphSet::getShaping(const std::u16string &logicalInput, const float maxWidth,
                                     const float lineHeight, const float horizontalAlign,
                                     const float verticalAlign, const float justify,
@@ -40,10 +51,10 @@ const Shaping GlyphSet::getShaping(const std::u16string &logicalInput, const flo
     // The string stored in shaping.text is used for finding duplicates, but may end up quite different from the glyphs that get shown
     Shaping shaping(translate.x * 24, translate.y * 24, logicalInput);
     
-    bidi.applyBidiToParagraph(logicalInput);
+    ProcessedBiDiText processedText = bidi.processText(logicalInput);
     
     std::vector<std::u16string> reorderedLines =
-        bidi.applyBidiLineBreaking(
+        processedText.applyLineBreaking(
             determineLineBreaks(logicalInput,
                                 spacing,
                                 maxWidth,
@@ -87,12 +98,12 @@ void justifyLine(std::vector<PositionedGlyph> &positionedGlyphs, const std::map<
 
 // We determine line breaks based on shaped text in logical order. Working in visual order would be
 //  more intuitive, but we can't do that because the visual order may be changed by line breaks!
-std::vector<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logicalInput, const float spacing, float maxWidth, bool useBalancedIdeographicBreaking) const
+std::set<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logicalInput, const float spacing, float maxWidth, bool useBalancedIdeographicBreaking) const
 {
     if ( !maxWidth )
-        return { static_cast<int32_t>( logicalInput.size() ) };
+        return {};
     
-    std::vector<int32_t> lineBreakPoints;
+    std::set<int32_t> lineBreakPoints;
    
     if (useBalancedIdeographicBreaking) {
         float totalWidth = 0;
@@ -101,7 +112,6 @@ std::vector<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logical
             totalWidth += sdfs.find(chr)->second.metrics.advance + spacing;
         }
         
-        // TODO: This "totalWidth" is one character wider than we were using before, but I think it's closer to what we want?
         uint32_t estimatedLineCount = std::fmax(1, std::ceil(totalWidth / maxWidth));
         maxWidth = totalWidth / estimatedLineCount;
     }
@@ -116,7 +126,7 @@ std::vector<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logical
         currentX += glyph.metrics.advance + spacing;
         if ( currentX > maxWidth && lastSafeBreak > 0 )
         {
-            lineBreakPoints.push_back(lastSafeBreak);
+            lineBreakPoints.insert(lastSafeBreak);
             currentX -= lastSafeBreakX;
             lastSafeBreakX = 0;
         }
@@ -152,6 +162,9 @@ void GlyphSet::shapeLines(Shaping& shaping, const std::vector<std::u16string>& l
                                   [ & ] (const char16_t& chr) -> bool { auto it = sdfs.find(chr); return it == sdfs.end(); }),
                    line.end());
         
+        // Collapse whitespace so it doesn't throw off justification
+        line = trim(line);
+        
         if (line.empty())
             continue;
         
@@ -163,17 +176,11 @@ void GlyphSet::shapeLines(Shaping& shaping, const std::vector<std::u16string>& l
             x += glyph.metrics.advance + spacing;
         }
         
-        // Collapse invisible characters.
-        uint32_t lineEndIndex = shaping.positionedGlyphs.size() - 1;
-        // TODO refactor: Seems like isVisible should be called isInvisible? Also there's an edge case here with one character invisible lines
-        if (util::i18n::isVisible(line[lineEndIndex]))
-            lineEndIndex--;
-
-        justifyLine(shaping.positionedGlyphs, sdfs, lineStartIndex, lineEndIndex, justify);
-        
         maxLineLength = util::max(x,maxLineLength);
-        x = 0;           // Carriage return
-        y += lineHeight; // Line feed!
+        
+        justifyLine(shaping.positionedGlyphs, sdfs, lineStartIndex, shaping.positionedGlyphs.size() - 1, justify);
+        
+        x = 0; y += lineHeight;  // Move to next line
     }
     
     align(shaping, justify, horizontalAlign, verticalAlign, maxLineLength, lineHeight, lines.size(), translate);

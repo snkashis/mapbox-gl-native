@@ -15,7 +15,7 @@ public:
                              float spacing, const Point<float> &translate, BiDi& bidi) const;
 
 private:
-    std::vector<int32_t> determineLineBreaks(const std::u16string& logicalInput, const float spacing, float maxWidth, bool useBalancedIdeographicBreaking) const;
+    std::set<int32_t> determineLineBreaks(const std::u16string& logicalInput, const float spacing, float maxWidth, bool useBalancedIdeographicBreaking) const;
     
     void shapeLines(Shaping &shaping, const std::vector<std::u16string>& lines, const float spacing, float lineHeight, float horizontalAlign,
                   float verticalAlign, float justify, const Point<float> &translate) const;

@@ -90,7 +90,7 @@ SymbolLayout::SymbolLayout(std::string bucketName_,
                 u8string = platform::lowercase(u8string);
             }
 
-            ft.text = bidi.applyArabicShaping(util::utf8_to_utf16::convert(u8string));
+            ft.text = applyArabicShaping(util::utf8_to_utf16::convert(u8string));
 
             // Loop through all characters of this text and collect unique codepoints.
             for (char16_t chr : *ft.text) {
@@ -201,7 +201,7 @@ void SymbolLayout::prepare(uintptr_t tileUID,
                 /* verticalAlign */ verticalAlign,
                 /* justify */ justify,
                 /* spacing: ems */ layout.get<TextLetterSpacing>() * 24,
-                /* translate */ Point<float>(layout.get<TextOffset>()[0], layout.get<TextOffset>()[1]));
+                /* translate */ Point<float>(layout.get<TextOffset>()[0], layout.get<TextOffset>()[1]),
                 /* bidirectional algorithm object */ bidi);
 
             // Add the glyphs we need for this label to the glyph atlas.
