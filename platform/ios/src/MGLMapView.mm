@@ -359,15 +359,16 @@ public:
 {
     if (_isTargetingInterfaceBuilder) return;
     
-    self.style = [[MGLStyle alloc] initWithMapView:self];
-
     if ( ! styleURL)
     {
         styleURL = [MGLStyle streetsStyleURLWithVersion:MGLStyleDefaultVersion];
     }
 
     styleURL = styleURL.mgl_URLByStandardizingScheme;
+    [self willChangeValueForKey:@"style"];
+    _style = [[MGLStyle alloc] initWithMapView:self];
     _mbglMap->setStyleURL([[styleURL absoluteString] UTF8String]);
+    [self didChangeValueForKey:@"style"];
 }
 
 - (IBAction)reloadStyle:(__unused id)sender {

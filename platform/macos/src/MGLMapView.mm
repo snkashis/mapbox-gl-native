@@ -579,8 +579,6 @@ public:
         return;
     }
     
-    self.style = [[MGLStyle alloc] initWithMapView:self];
-    
     // Default to Streets.
     if (!styleURL) {
         // An access token is required to load any default style, including
@@ -592,7 +590,10 @@ public:
     }
 
     styleURL = styleURL.mgl_URLByStandardizingScheme;
+    [self willChangeValueForKey:@"style"];
+    _style = [[MGLStyle alloc] initWithMapView:self];
     _mbglMap->setStyleURL(styleURL.absoluteString.UTF8String);
+    [self didChangeValueForKey:@"style"];
 }
 
 - (IBAction)reloadStyle:(__unused id)sender {
