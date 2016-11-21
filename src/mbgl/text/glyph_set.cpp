@@ -35,14 +35,6 @@ const std::map<uint32_t, SDFGlyph> &GlyphSet::getSDFs() const {
     return sdfs;
 }
 
-std::u16string trim(const std::u16string& input)
-{
-    // We have to round-trip to UTF8 to use boost::algorithm::trim because ctype<char16_t> isn't defined in our STL
-    std::string u8string = util::utf16_to_utf8::convert(input);
-    boost::algorithm::trim(u8string);
-    return util::utf8_to_utf16::convert(u8string);
-}
-
 const Shaping GlyphSet::getShaping(const std::u16string &logicalInput, const float maxWidth,
                                     const float lineHeight, const float horizontalAlign,
                                     const float verticalAlign, const float justify,
@@ -141,7 +133,7 @@ std::set<int32_t> GlyphSet::determineLineBreaks(const std::u16string& logicalInp
 
     return lineBreakPoints;
 }
-
+    
 void GlyphSet::shapeLines(Shaping& shaping, const std::vector<std::u16string>& lines,
                              const float spacing, const float lineHeight, const float horizontalAlign, const float verticalAlign,
                              const float justify, const Point<float> &translate) const {
@@ -163,7 +155,7 @@ void GlyphSet::shapeLines(Shaping& shaping, const std::vector<std::u16string>& l
                    line.end());
         
         // Collapse whitespace so it doesn't throw off justification
-        line = trim(line);
+        boost::algorithm::trim_if(line, boost::algorithm::is_any_of(u" \t\n\v\f\r"));
         
         if (line.empty())
             continue;
