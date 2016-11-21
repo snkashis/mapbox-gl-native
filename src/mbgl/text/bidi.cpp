@@ -98,10 +98,14 @@ std::u16string BiDi::getLine(int32_t start, int32_t end)
     if (U_FAILURE(errorCode))
         throw std::runtime_error("msg");
     
-    // Only valid as long as UBIDI_REMOVE_BIDI_CONTROLS and UBIDI_INSERT_LRM_FOR_NUMERIC are not set
+    // Because we set UBIDI_REMOVE_BIDI_CONTROLS, the output may be smaller than what we reserve
+    //  Setting UBIDI_INSERT_LRM_FOR_NUMERIC would require ubidi_getLength(pBiDi)+2*ubidi_countRuns(pBiDi)
     int32_t outputLength = ubidi_getProcessedLength(bidiLine);
     std::unique_ptr<UChar[]> outputText = std::make_unique<UChar[]>(outputLength);
-    ubidi_writeReordered(bidiLine, outputText.get(),outputLength, UBIDI_DO_MIRRORING, &errorCode);
+    
+    // UBIDI_DO_MIRRORING: Apply unicode mirroring of characters like parentheses
+    // UBIDI_REMOVE_BIDI_CONTROLS: Now that all the lines are set, remove control characters so that they don't show up on screen (some fonts have glyphs representing them)
+    ubidi_writeReordered(bidiLine, outputText.get(),outputLength, UBIDI_DO_MIRRORING|UBIDI_REMOVE_BIDI_CONTROLS, &errorCode);
     
     if (U_FAILURE(errorCode))
         throw std::runtime_error(std::string("BiDi::getLine: ") + u_errorName(errorCode));
