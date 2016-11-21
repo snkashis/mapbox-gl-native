@@ -412,11 +412,11 @@
 
 - (void)setIconImageName:(MGLStyleValue<NSString *> *)iconImageName {
     auto mbglValue = MGLStyleValueTransformer<std::string, NSString *>().toPropertyValue(iconImageName);
-    self.rawLayer->setIconImageName(mbglValue);
+    self.rawLayer->setIconImage(mbglValue);
 }
 
 - (MGLStyleValue<NSString *> *)iconImageName {
-    auto propertyValue = self.rawLayer->getIconImageName() ?: self.rawLayer->getDefaultIconImageName();
+    auto propertyValue = self.rawLayer->getIconImage() ?: self.rawLayer->getDefaultIconImage();
     return MGLStyleValueTransformer<std::string, NSString *>().toStyleValue(propertyValue);
 }
 

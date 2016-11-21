@@ -111,21 +111,21 @@
 
 - (void)setRasterBrightnessMinimum:(MGLStyleValue<NSNumber *> *)rasterBrightnessMinimum {
     auto mbglValue = MGLStyleValueTransformer<float, NSNumber *>().toPropertyValue(rasterBrightnessMinimum);
-    self.rawLayer->setRasterBrightnessMinimum(mbglValue);
+    self.rawLayer->setRasterBrightnessMin(mbglValue);
 }
 
 - (MGLStyleValue<NSNumber *> *)rasterBrightnessMinimum {
-    auto propertyValue = self.rawLayer->getRasterBrightnessMinimum() ?: self.rawLayer->getDefaultRasterBrightnessMinimum();
+    auto propertyValue = self.rawLayer->getRasterBrightnessMin() ?: self.rawLayer->getDefaultRasterBrightnessMin();
     return MGLStyleValueTransformer<float, NSNumber *>().toStyleValue(propertyValue);
 }
 
 - (void)setRasterBrightnessMaximum:(MGLStyleValue<NSNumber *> *)rasterBrightnessMaximum {
     auto mbglValue = MGLStyleValueTransformer<float, NSNumber *>().toPropertyValue(rasterBrightnessMaximum);
-    self.rawLayer->setRasterBrightnessMaximum(mbglValue);
+    self.rawLayer->setRasterBrightnessMax(mbglValue);
 }
 
 - (MGLStyleValue<NSNumber *> *)rasterBrightnessMaximum {
-    auto propertyValue = self.rawLayer->getRasterBrightnessMaximum() ?: self.rawLayer->getDefaultRasterBrightnessMaximum();
+    auto propertyValue = self.rawLayer->getRasterBrightnessMax() ?: self.rawLayer->getDefaultRasterBrightnessMax();
     return MGLStyleValueTransformer<float, NSNumber *>().toStyleValue(propertyValue);
 }
 
