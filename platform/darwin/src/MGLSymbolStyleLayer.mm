@@ -180,16 +180,6 @@
     return MGLStyleValueTransformer<std::array<float, 4>, NSValue *>().toStyleValue(propertyValue);
 }
 
-- (void)setIconImage:(MGLStyleValue<NSString *> *)iconImage {
-    auto mbglValue = MGLStyleValueTransformer<std::string, NSString *>().toPropertyValue(iconImage);
-    self.rawLayer->setIconImage(mbglValue);
-}
-
-- (MGLStyleValue<NSString *> *)iconImage {
-    auto propertyValue = self.rawLayer->getIconImage() ?: self.rawLayer->getDefaultIconImage();
-    return MGLStyleValueTransformer<std::string, NSString *>().toStyleValue(propertyValue);
-}
-
 - (void)setIconRotate:(MGLStyleValue<NSNumber *> *)iconRotate {
     auto mbglValue = MGLStyleValueTransformer<float, NSNumber *>().toPropertyValue(iconRotate);
     self.rawLayer->setIconRotate(mbglValue);
@@ -418,6 +408,16 @@
 - (MGLStyleValue<NSNumber *> *)textOptional {
     auto propertyValue = self.rawLayer->getTextOptional() ?: self.rawLayer->getDefaultTextOptional();
     return MGLStyleValueTransformer<bool, NSNumber *>().toStyleValue(propertyValue);
+}
+
+- (void)setIconImageName:(MGLStyleValue<NSString *> *)iconImageName {
+    auto mbglValue = MGLStyleValueTransformer<std::string, NSString *>().toPropertyValue(iconImageName);
+    self.rawLayer->setIconImageName(mbglValue);
+}
+
+- (MGLStyleValue<NSString *> *)iconImageName {
+    auto propertyValue = self.rawLayer->getIconImageName() ?: self.rawLayer->getDefaultIconImageName();
+    return MGLStyleValueTransformer<std::string, NSString *>().toStyleValue(propertyValue);
 }
 
 #pragma mark - Accessing the Paint Attributes
