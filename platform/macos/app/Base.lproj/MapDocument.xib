@@ -8,6 +8,7 @@
             <connections>
                 <outlet property="mapView" destination="q4d-kF-8Hi" id="7hI-dS-A5R"/>
                 <outlet property="mapViewContextMenu" destination="XbX-6a-Mgy" id="YD0-1r-5N2"/>
+                <outlet property="splitView" destination="IPR-fm-vk8" id="9xt-ar-uad"/>
                 <outlet property="window" destination="cSv-fg-MAQ" id="TBu-Mu-79N"/>
             </connections>
         </customObject>
@@ -94,14 +95,14 @@
                                                     </textFieldCell>
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <connections>
-                                                        <binding destination="GXW-3J-Gff" name="fontItalic" keyPath="arrangedObjects.visible" id="6Wu-cz-WSI">
-                                                            <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSNegateBoolean</string>
-                                                            </dictionary>
-                                                        </binding>
                                                         <binding destination="GXW-3J-Gff" name="value" keyPath="arrangedObjects.identifier" id="vQC-tc-CMF">
                                                             <dictionary key="options">
                                                                 <bool key="NSConditionallySetsEditable" value="YES"/>
+                                                            </dictionary>
+                                                        </binding>
+                                                        <binding destination="GXW-3J-Gff" name="fontItalic" keyPath="arrangedObjects.visible" id="6Wu-cz-WSI">
+                                                            <dictionary key="options">
+                                                                <string key="NSValueTransformerName">NSNegateBoolean</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -135,6 +136,9 @@
                             <real value="250"/>
                             <real value="250"/>
                         </holdingPriorities>
+                        <connections>
+                            <outlet property="delegate" destination="-2" id="dbC-MC-CAy"/>
+                        </connections>
                     </splitView>
                 </subviews>
                 <constraints>
@@ -196,8 +200,25 @@
                             <action selector="setStyle:" target="-1" id="2Kw-9i-a3G"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="ACA1D8BE-A108-4BF9-92DC-AE7AA7342CF9" label="Layers" paletteLabel="Show Layers" image="NSListViewTemplate" id="THR-Dm-mn8" customClass="ValidatedToolbarItem">
+                        <nil key="toolTip"/>
+                        <size key="minSize" width="47" height="32"/>
+                        <size key="maxSize" width="48" height="32"/>
+                        <button key="view" verticalHuggingPriority="750" id="C3e-Oy-STT">
+                            <rect key="frame" x="14" y="14" width="47" height="32"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" image="NSListViewTemplate" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="2Gf-wm-QuI">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                            </buttonCell>
+                        </button>
+                        <connections>
+                            <action selector="toggleLayers:" target="-1" id="NHT-rn-BuG"/>
+                        </connections>
+                    </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>
+                    <toolbarItem reference="THR-Dm-mn8"/>
                     <toolbarItem reference="XJT-Ho-tuZ"/>
                     <toolbarItem reference="z4l-5x-MzK"/>
                     <toolbarItem reference="u23-0z-Otl"/>
@@ -244,6 +265,7 @@
         </menu>
     </objects>
     <resources>
+        <image name="NSListViewTemplate" width="14" height="10"/>
         <image name="NSShareTemplate" width="11" height="16"/>
         <image name="symbol" width="13" height="13"/>
     </resources>

@@ -46,9 +46,10 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     return flattenedShapes;
 }
 
-@interface MapDocument () <NSWindowDelegate, NSSharingServicePickerDelegate, NSMenuDelegate, MGLMapViewDelegate>
+@interface MapDocument () <NSWindowDelegate, NSSharingServicePickerDelegate, NSMenuDelegate, NSSplitViewDelegate, MGLMapViewDelegate>
 
 @property (weak) IBOutlet NSMenu *mapViewContextMenu;
+@property (weak) IBOutlet NSSplitView *splitView;
 
 @end
 
@@ -97,6 +98,8 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     
     NSPressGestureRecognizer *pressGestureRecognizer = [[NSPressGestureRecognizer alloc] initWithTarget:self action:@selector(handlePressGesture:)];
     [self.mapView addGestureRecognizer:pressGestureRecognizer];
+    
+    [self.splitView setPosition:0 ofDividerAtIndex:0];
     
     [self applyPendingState];
 }
@@ -215,6 +218,14 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
 
 - (IBAction)reload:(id)sender {
     [self.mapView reloadStyle:sender];
+}
+
+- (IBAction)toggleLayers:(id)sender {
+    BOOL isShown = ![self.splitView isSubviewCollapsed:self.splitView.arrangedSubviews.firstObject];
+    [NSAnimationContext runAnimationGroup:^(NSAnimationContext * _Nonnull context) {
+        context.allowsImplicitAnimation = YES;
+        [self.splitView setPosition:isShown ? 0 : 100 ofDividerAtIndex:0];
+    } completionHandler:nil];
 }
 
 - (void)applyPendingState {
@@ -607,6 +618,11 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
     if (menuItem.action == @selector(reload:)) {
         return YES;
     }
+    if (menuItem.action == @selector(toggleLayers:)) {
+        BOOL isShown = ![self.splitView isSubviewCollapsed:self.splitView.arrangedSubviews.firstObject];
+        menuItem.title = isShown ? @"Hide Layers" : @"Show Layers";
+        return YES;
+    }
     if (menuItem.action == @selector(manipulateStyle:)) {
         return YES;
     }
@@ -722,7 +738,8 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
         return NO;
     }
     
-    if (toolbarItem.action == @selector(showShareMenu:)) {
+    SEL action = toolbarItem.action;
+    if (action == @selector(showShareMenu:)) {
         [(NSButton *)toolbarItem.view sendActionOn:NSLeftMouseDownMask];
         if (![MGLAccountManager accessToken]) {
             return NO;
@@ -731,7 +748,7 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
         return ([styleURL.scheme isEqualToString:@"mapbox"]
                 && [styleURL.pathComponents.firstObject isEqualToString:@"styles"]);
     }
-    if (toolbarItem.action == @selector(setStyle:)) {
+    if (action == @selector(setStyle:)) {
         NSPopUpButton *popUpButton = (NSPopUpButton *)toolbarItem.view;
         NSUInteger index = self.indexOfStyleInToolbarItem;
         if (index == NSNotFound) {
@@ -739,6 +756,10 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
             index = [popUpButton numberOfItems] - 1;
         }
         [popUpButton selectItemAtIndex:index];
+    }
+    if (action == @selector(toggleLayers:)) {
+        BOOL isShown = ![self.splitView isSubviewCollapsed:self.splitView.arrangedSubviews.firstObject];
+        [(NSButton *)toolbarItem.view setState:isShown ? NSOnState : NSOffState];
     }
     return NO;
 }
@@ -771,6 +792,16 @@ NS_ARRAY_OF(id <MGLAnnotation>) *MBXFlattenedShapes(NS_ARRAY_OF(id <MGLAnnotatio
         _mouseLocationForMapViewContextMenu = [self.window.contentView convertPoint:self.window.mouseLocationOutsideOfEventStream
                                                                              toView:self.mapView];
     }
+}
+
+#pragma mark NSSplitViewDelegate methods
+
+- (BOOL)splitView:(NSSplitView *)splitView canCollapseSubview:(NSView *)subview {
+    return subview != self.mapView;
+}
+
+- (BOOL)splitView:(NSSplitView *)splitView shouldCollapseSubview:(NSView *)subview forDoubleClickOnDividerAtIndex:(NSInteger)dividerIndex {
+    return YES;
 }
 
 #pragma mark MGLMapViewDelegate methods
