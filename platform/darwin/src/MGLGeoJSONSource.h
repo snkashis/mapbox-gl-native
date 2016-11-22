@@ -99,11 +99,11 @@ extern const MGLGeoJSONSourceOption MGLGeoJSONSourceOptionSimplificationToleranc
  specification</a>.
  
  @param identifier A string that uniquely identifies the source.
- @param features An array of features that conform to the `MGLFeature` protocol.
+ @param feature A feature that conform to the `MGLFeature` protocol.
  @param options An `NSDictionary` of options for this source.
  @return An initialized GeoJSON source.
  */
-- (instancetype)initWithIdentifier:(NSString *)identifier features:(NSArray<id<MGLFeature>> *)features options:(nullable NS_DICTIONARY_OF(MGLGeoJSONSourceOption, id) *)options NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithIdentifier:(NSString *)identifier feature:(nullable id<MGLFeature>)feature options:(nullable NS_DICTIONARY_OF(MGLGeoJSONSourceOption, id) *)options NS_DESIGNATED_INITIALIZER;
 
 #pragma mark Accessing a Source’s Content
 
@@ -114,7 +114,7 @@ extern const MGLGeoJSONSourceOption MGLGeoJSONSourceOptionSimplificationToleranc
  is set to `nil`. This property is unavailable until the receiver is passed into
  `-[MGLStyle addSource]`.
  */
-@property (nonatomic, nullable) NS_ARRAY_OF(id <MGLFeature>) *features;
+@property (nonatomic, nullable) id <MGLFeature> feature;
 
 /**
  A GeoJSON representation of the contents of the source.

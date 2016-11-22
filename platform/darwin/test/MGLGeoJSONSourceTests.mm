@@ -35,27 +35,37 @@
     XCTAssertThrows([[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" URL:url options:options]);
 }
 
-- (void)testMGLGeoJSONSourceWithData {
+- (void)testMGLGeoJSONSourceWithDataMultipleFeatures {
     
     NSString *geoJSON = @"{\"type\": \"FeatureCollection\",\"features\": [{\"type\": \"Feature\",\"properties\": {},\"geometry\": {\"type\": \"LineString\",\"coordinates\": [[-107.75390625,40.329795743702064],[-104.34814453125,37.64903402157866]]}}]}";
     
     NSData *data = [geoJSON dataUsingEncoding:NSUTF8StringEncoding];
     MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" geoJSONData:data options:nil];
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLPolylineFeature class]]);
+    XCTAssertNotNil(source.feature);
+#warning - MGLPolylineFeature doesn't round-trip
+    //XCTAssertTrue([source.feature isMemberOfClass:[MGLPolylineFeature class]]);
+    XCTAssertTrue([source.feature isMemberOfClass:MGLShapeCollectionFeature.class]);
+}
+
+- (void)testMGLGeoJSONSourceWithSingleFeature {
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"geojson"
+                                                                geoJSONData:[@"{\"type\": \"Point\", \"coordinates\": [0, 0]}" dataUsingEncoding:NSUTF8StringEncoding]
+                                                                    options:nil];
+    id feature = source.feature;
+    XCTAssertNotNil(source.feature);
+    //XCTAssertNotNil(source.features);
+    //XCTAssertEqual(source.features.count, 1);
 }
 
 - (void)testMGLGeoJSONSourceWithPolylineFeatures {
     CLLocationCoordinate2D coordinates[] = { CLLocationCoordinate2DMake(0, 0), CLLocationCoordinate2DMake(10, 10)};
     MGLPolylineFeature *polylineFeature = [MGLPolylineFeature polylineWithCoordinates:coordinates count:2];
     
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" features:@[polylineFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" feature:polylineFeature options:nil];
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLPolylineFeature class]]);
+    XCTAssertNotNil(source.feature);
+    XCTAssertTrue([source.feature isMemberOfClass:[MGLPolylineFeature class]]);
 }
 
 - (void)testMGLGeoJSONSourceWithPolygonFeatures {
@@ -88,11 +98,11 @@
                                   @"array-of-array-attribute": arrayOfArrays,
                                   @"array-of-dictionary-attribute": arrayOfDictionaries};
     
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" features:@[polygonFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" feature:polygonFeature options:nil];
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    MGLPolygonFeature *expectedPolygonFeature = (MGLPolygonFeature *)source.features.firstObject;
+    XCTAssertNotNil(source.feature);
+    MGLPolygonFeature *expectedPolygonFeature = (MGLPolygonFeature *)source.feature;
+    XCTAssertEqualObjects(expectedPolygonFeature.identifier, polygonFeature.identifier);
     XCTAssertTrue([expectedPolygonFeature isMemberOfClass:[MGLPolygonFeature class]]);
     XCTAssertEqualObjects(expectedPolygonFeature.identifier, polygonFeature.identifier);
     XCTAssertEqualObjects(expectedPolygonFeature.attributes[@"name"], stringAttribute);
@@ -123,12 +133,11 @@
     
     MGLPolygonFeature *polygonFeature = [MGLPolygonFeature polygonWithCoordinates:coordinates count:5 interiorPolygons:@[polygon]];
     
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" features:@[polygonFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" feature:polygonFeature options:nil];
    
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLPolygonFeature class]]);
+    XCTAssertNotNil(source.feature);
+    XCTAssertTrue([source.feature isMemberOfClass:[MGLPolygonFeature class]]);
 }
 
 - (void)testMGLGeoJSONSourceWithMultiPolylineFeatures {
@@ -138,11 +147,10 @@
     MGLPolylineFeature *secondPolylineFeature = [MGLPolylineFeature polylineWithCoordinates:secondCoordinates count:2];
     MGLMultiPolylineFeature *multiPolylineFeature = [MGLMultiPolylineFeature multiPolylineWithPolylines:@[firstPolylineFeature, secondPolylineFeature]];
     
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" features:@[multiPolylineFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" feature:multiPolylineFeature options:nil];
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLMultiPolylineFeature class]]);
+    XCTAssertNotNil(source.feature);
+    XCTAssertTrue([source.feature isMemberOfClass:[MGLMultiPolylineFeature class]]);
 }
 
 - (void)testMGLGeoJSONSourceWithMultiPolygonFeatures {
@@ -167,23 +175,20 @@
     
     MGLMultiPolygonFeature *multiPolygonFeature = [MGLMultiPolygonFeature multiPolygonWithPolygons:@[firstPolygon, secondPolygon]];
     
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" features:@[multiPolygonFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" feature:multiPolygonFeature options:nil];
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLMultiPolygonFeature class]]);
-
+    XCTAssertNotNil(source.feature);
+    XCTAssertTrue([source.feature isMemberOfClass:[MGLMultiPolygonFeature class]]);
 }
 
 - (void)testMGLGeoJSONSourceWithPointFeature {
     MGLPointFeature *pointFeature = [MGLPointFeature new];
     pointFeature.coordinate = CLLocationCoordinate2DMake(100.2, 0.2);
     
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"souce-id" features:@[pointFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"souce-id" feature:pointFeature options:nil];
     
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLPointFeature class]]);
+    XCTAssertNotNil(source.feature);
+    XCTAssertTrue([source.feature isMemberOfClass:[MGLPointFeature class]]);
 }
 
 - (void)testMGLGeoJSONSourceWithPointCollectionFeature {
@@ -194,11 +199,10 @@
         CLLocationCoordinate2DMake(100.0, 1.0),
         CLLocationCoordinate2DMake(100.0, 0.0)};
     MGLPointCollectionFeature *pointCollectionFeature = [MGLPointCollectionFeature pointCollectionWithCoordinates:coordinates count:5];
-    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"souce-id" features:@[pointCollectionFeature] options:nil];
+    MGLGeoJSONSource *source = [[MGLGeoJSONSource alloc] initWithIdentifier:@"souce-id" feature:pointCollectionFeature options:nil];
 
-    XCTAssertNotNil(source.features);
-    XCTAssertEqual(source.features.count, 1);
-    XCTAssertTrue([source.features.firstObject isMemberOfClass:[MGLPointCollectionFeature class]]);
+    XCTAssertNotNil(source.feature);
+    XCTAssertTrue([source.feature isMemberOfClass:[MGLPointCollectionFeature class]]);
 }
 
 - (void)testMGLGeoJSONSourceWithShapeCollectionFeatures {
@@ -236,7 +240,7 @@
 
     MGLShapeCollectionFeature *shapeCollectionFeature_1 = [MGLShapeCollectionFeature shapeCollectionWithShapes:@[polygonFeature, polylineFeature, multiPolygonFeature, multiPolylineFeature, pointCollectionFeature, pointFeature, shapeCollectionFeature]];
 
-    XCTAssertThrowsSpecificNamed([[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" features:@[shapeCollectionFeature_1] options:nil], NSException, @"Method unavailable");
+    XCTAssertThrowsSpecificNamed([[MGLGeoJSONSource alloc] initWithIdentifier:@"source-id" feature:shapeCollectionFeature_1 options:nil], NSException, @"Method unavailable");
 }
 
 @end

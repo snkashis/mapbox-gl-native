@@ -49,9 +49,10 @@ const MGLGeoJSONSourceOption MGLGeoJSONSourceOptionSimplificationTolerance = @"M
     return self;
 }
 
-- (instancetype)initWithIdentifier:(NSString *)identifier features:(NSArray<id<MGLFeature>> *)features options:(NS_DICTIONARY_OF(NSString *,id) *)options {
+- (instancetype)initWithIdentifier:(NSString *)identifier feature:(id<MGLFeature>)feature options:(NSDictionary<MGLGeoJSONSourceOption,id> *)options
+{
     if (self = [super initWithIdentifier:identifier]) {
-        _features = features;
+        _feature = feature;
         _options = options;
         [self commonInit];
     }
@@ -79,21 +80,43 @@ const MGLGeoJSONSourceOption MGLGeoJSONSourceOptionSimplificationTolerance = @"M
     if (self.URL) {
         NSURL *url = self.URL.mgl_URLByStandardizingScheme;
         source->setURL(url.absoluteString.UTF8String);
-        _features = nil;
+        _feature = nil;
     } else if (self.geoJSONData) {
+        
         NSString *string = [[NSString alloc] initWithData:self.geoJSONData encoding:NSUTF8StringEncoding];
-        const auto geojson = mapbox::geojson::parse(string.UTF8String).get<mapbox::geojson::feature_collection>();
-        source->setGeoJSON(geojson);
-        _features = MGLFeaturesFromMBGLFeatures(geojson);
-    } else {
-        mbgl::FeatureCollection featureCollection;
-        featureCollection.reserve(self.features.count);
-        for (id <MGLFeaturePrivate> feature in self.features) {
-            featureCollection.push_back([feature mbglFeature]);
+        // TODO: Figure out a more performant way than serializing the data just to do a type check
+#warning - DEBUG CODE
+        id serialized = [NSJSONSerialization JSONObjectWithData:self.geoJSONData options:0 error:nil];
+        BOOL isFeatureCollection = [serialized isKindOfClass:NSArray.class] || ([serialized isKindOfClass:NSDictionary.class] && [[(NSDictionary *)serialized objectForKey:@"type"] isEqualToString:@"FeatureCollection"]);
+        
+        if (isFeatureCollection) {
+            const auto geojson = mapbox::geojson::parse(string.UTF8String).get<mapbox::geojson::feature_collection>();
+            source->setGeoJSON(geojson);
+            _feature = MGLShapeCollectionFeatureFromMBGLFeatures(geojson);
+        } else {
+            const auto geojson = mapbox::geojson::parse(string.UTF8String).get<mapbox::geojson::feature>();
+            source->setGeoJSON(geojson);
+            _feature = MGLFeatureFromMBGLFeature(geojson);
         }
-        const auto geojson = mbgl::GeoJSON{featureCollection};
-        source->setGeoJSON(geojson);
-        _features = MGLFeaturesFromMBGLFeatures(featureCollection);
+        
+    } else {
+        // Feature collection
+        if ([self.feature isMemberOfClass:MGLShapeCollectionFeature.class]) {
+            MGLShapeCollectionFeature *collection = self.feature;
+            mbgl::FeatureCollection featureCollection;
+            featureCollection.reserve(collection.shapes.count);
+            for (id <MGLFeaturePrivate> feature in collection.shapes) {
+                featureCollection.push_back([feature mbglFeature]);
+            }
+            const auto geojson = mbgl::GeoJSON{featureCollection};
+            source->setGeoJSON(geojson);
+        }
+        // Single feature
+        else
+        {
+            const auto geojson = mbgl::GeoJSON{[(NSObject<MGLFeaturePrivate> *)self.feature mbglFeature]};
+            source->setGeoJSON(geojson);
+        }
     }
     
     _pendingSource = std::move(source);
@@ -157,8 +180,7 @@ const MGLGeoJSONSourceOption MGLGeoJSONSourceOptionSimplificationTolerance = @"M
     NSString *string = [[NSString alloc] initWithData:_geoJSONData encoding:NSUTF8StringEncoding];
     const auto geojson = mapbox::geojson::parse(string.UTF8String).get<mapbox::geojson::feature_collection>();
     self.rawSource->setGeoJSON(geojson);
-    
-    _features = MGLFeaturesFromMBGLFeatures(geojson);
+    //_feature = MGLFeatureFromMBGLFeature(geojson);
 }
 
 - (void)setURL:(NSURL *)URL
@@ -188,8 +210,7 @@ const MGLGeoJSONSourceOption MGLGeoJSONSourceOptionSimplificationTolerance = @"M
     }
     const auto geojson = mbgl::GeoJSON{featureCollection};
     self.rawSource->setGeoJSON(geojson);
-    
-    _features = MGLFeaturesFromMBGLFeatures(featureCollection);
+    //_features = MGLFeaturesFromMBGLFeatures(featureCollection);
 }
 
 @end

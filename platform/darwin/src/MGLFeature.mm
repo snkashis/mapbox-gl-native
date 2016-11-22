@@ -287,6 +287,34 @@ NS_ARRAY_OF(MGLShape <MGLFeature> *) *MGLFeaturesFromMBGLFeatures(const std::vec
     return shapes;
 }
 
+MGLShapeCollectionFeature *MGLShapeCollectionFeatureFromMBGLFeatures(const std::vector<mbgl::Feature> &features) {
+    
+    NSMutableArray *shapes = [NSMutableArray arrayWithCapacity:features.size()];
+    for (const auto &feature : features) {
+        [shapes addObject:MGLFeatureFromMBGLFeature(feature)];
+    }
+    
+    return [MGLShapeCollectionFeature shapeCollectionWithShapes:shapes];
+}
+
+id <MGLFeature> MGLFeatureFromMBGLFeature(const mbgl::Feature &feature) {
+    
+    NSMutableDictionary *attributes = [NSMutableDictionary dictionaryWithCapacity:feature.properties.size()];
+    for (auto &pair : feature.properties) {
+        auto &value = pair.second;
+        ValueEvaluator evaluator;
+        attributes[@(pair.first.c_str())] = mbgl::Value::visit(value, evaluator);
+    }
+    GeometryEvaluator<double> evaluator;
+    MGLShape <MGLFeaturePrivate> *shape = mapbox::geometry::geometry<double>::visit(feature.geometry, evaluator);
+    if (feature.id) {
+        shape.identifier = mbgl::FeatureIdentifier::visit(*feature.id, ValueEvaluator());
+    }
+    shape.attributes = attributes;
+    
+    return shape;
+}
+
 mbgl::Feature mbglFeature(mbgl::Feature feature, id identifier, NSDictionary *attributes)
 {
     if (identifier) {
